@@ -241,17 +241,19 @@ function preserveHookOpener(transformedScript: string, originalHook: string): st
 
 /**
  * Validate and clean transformed script
+ * @param script - The transformed script from Claude
+ * @param actualHook - The ACTUAL hook from the input (not Claude's version)
  */
-function processTransformedScript(script: TransformedScript): TransformedScript {
-  // Apply hook opener preservation
+function processTransformedScript(script: TransformedScript, actualHook: string): TransformedScript {
+  // Apply hook opener preservation using the ACTUAL input hook
   const cleanedScript = preserveHookOpener(
     script.transformed_script || '',
-    script.original_hook || ''
+    actualHook  // Use the actual hook, not what Claude returned
   )
   
   return {
     script_index: script.script_index || 0,
-    original_hook: script.original_hook || '',
+    original_hook: actualHook,  // Store the actual hook
     transformed_script: cleanedScript,
     word_count: cleanedScript?.split(/\s+/).length || 0,
     changes_made: Array.isArray(script.changes_made) ? script.changes_made : [],
@@ -329,6 +331,9 @@ export async function transformVoice(
 
   for (let i = 0; i < scripts.length; i += batchSize) {
     const batch = scripts.slice(i, i + batchSize)
+    
+    // Store the actual hooks from input scripts - DON'T trust Claude's original_hook
+    const actualHooks = batch.map(s => s.hook)
 
     // Build prompt for batch
     const prompt = buildVoiceTransformationPrompt({
@@ -358,7 +363,13 @@ export async function transformVoice(
         }
 
         const transformed = parseTransformationResponse(content.text)
-        const processed = transformed.map(processTransformedScript)
+        
+        // Process each script with the ACTUAL hook from input (not Claude's version)
+        const processed = transformed.map((script, idx) => {
+          // Use the actual hook we sent to Claude, not what Claude returned
+          const actualHook = actualHooks[idx] || script.original_hook || ''
+          return processTransformedScript(script, actualHook)
+        })
 
         // Adjust script_index for batch offset
         for (const script of processed) {
