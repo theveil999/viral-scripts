@@ -195,13 +195,47 @@ Voice Pattern Analysis:
 ### Voice Mechanics Checklist
 
 Every script MUST include:
-- At least 2-3 filler words (${fillerSimple}) placed naturally mid-sentence
-- 1-2 of her sentence starters: ${sentenceStarters}
+- At least 2-3 filler words (${fillerSimple}) placed naturally **MID-SENTENCE** (not at the very start!)
 - Her energy level: ${energyLevel} - ${energyDescription}
 - Her humor style: ${humorStyle}
 - Her catchphrases where natural: ${catchphrases}
 
 Filler word frequencies: ${fillerList}
+
+## ⚠️ CRITICAL: OPENER DIVERSITY (READ THIS!)
+
+**DO NOT START EVERY SCRIPT THE SAME WAY!**
+
+The HOOK has an opener pattern that was CAREFULLY CHOSEN for diversity. 
+**PRESERVE THE HOOK'S OPENER** - don't replace it with "Okay so like" every time!
+
+❌ WRONG - Starting every script the same:
+- "Okay so like, I want a man who..."
+- "Okay so like, do you ever..."
+- "Okay so like, my toxic trait is..."
+- "So like, nothing is hotter than..."
+
+✅ RIGHT - Varied openers that MATCH THE HOOK:
+- "I want a man who..." (from bold_statement hook)
+- "Do you ever..." (from question hook)  
+- "My toxic trait is..." (from confession hook)
+- "Nothing is fucking hotter than..." (from hot_take hook)
+- "If you can't..." (from challenge hook)
+- "When a guy..." (from relatable hook)
+
+**RULES FOR OPENERS:**
+1. If the hook starts with "I want/need/love a man" → START with that exact pattern
+2. If the hook starts with "Do you ever" → START with that question
+3. If the hook starts with "My toxic trait" → START with that confession
+4. If the hook starts with "Nothing is hotter" → START with that phrase
+5. Her fillers ("like", "um", "okay so") go AFTER the opener, not before
+
+Example transformations:
+- Hook: "I need a man who grabs my chin" → "I need a man who like grabs my chin and..."
+- Hook: "Do you ever melt from a voice?" → "Do you ever like literally melt from just a guy's voice?"
+- Hook: "My toxic trait is I'll pull your pants down" → "My toxic trait is that like, I'll be making fun of you and then I'm like pulling your pants down..."
+
+**Her fillers enhance the MIDDLE of speech, they don't replace the opening hook pattern.**
 
 ### Parasocial Activation
 
@@ -216,11 +250,17 @@ ${parasocialAvoid.map((a: string) => `- ${a.replace(/_/g, ' ')}`).join('\n') || 
 Common AI patterns that sound fake - NEVER use:
 
 Opening crutches:
-- "Look," / "Listen," / "Okay so" (unless in her sample speech)
-- "I mean," as a starter
-- "Honestly," / "Truthfully,"
+- "Look," / "Listen," as a cold opener
+- "I mean," as a starter (mid-sentence is fine)
+- "Honestly," / "Truthfully," to start
 - "Let me tell you" / "Let me be real"
 - "Here's the thing"
+
+**CRITICAL - REPETITIVE OPENER PATTERN IS AN AI TELL:**
+- If ALL scripts start with "Okay so like" = OBVIOUS AI TELL
+- If ALL scripts start with "So like" = OBVIOUS AI TELL  
+- Varied openers = HUMAN, Repetitive openers = AI
+- The HOOK determines the opener, don't override it with filler words!
 
 Mid-script tells:
 - "right?" as a sentence ender (unless she does this naturally)
@@ -246,38 +286,45 @@ Vocabulary tells:
 
 ## TRANSFORMATION RULES
 
-1. READ HER SAMPLES ALOUD before rewriting
+1. **PRESERVE THE HOOK'S OPENER (MOST IMPORTANT)**
+   - The hook has a specific opener pattern - KEEP IT
+   - "I need a man" stays "I need a man" (with her voice added AFTER)
+   - "Do you ever" stays "Do you ever"
+   - "My toxic trait" stays "My toxic trait"
+   - Add her voice elements AFTER the hook pattern, not instead of it
+
+2. READ HER SAMPLES ALOUD before rewriting
    - Get her rhythm in your head
    - Notice her sentence length patterns
    - Feel her energy
 
-2. MATCH HER EXACT PATTERNS
+3. MATCH HER EXACT PATTERNS - MID-SENTENCE
    - If she uses "like" every 5-7 words, you should too
-   - If she trails off with "um," do that
+   - If she trails off with "um," do that (mid-sentence!)
    - If she interrupts herself, mirror that
 
-3. PRESERVE THE CONTENT, TRANSFORM THE VOICE
+4. PRESERVE THE CONTENT, TRANSFORM THE VOICE
    - Keep the hook, structure, and meaning intact
    - Change HOW it's said to match HER exactly
 
-4. REMOVE POLISH
+5. REMOVE POLISH
    - Her speech isn't polished - don't make it polished
    - Keep the beautiful mess of real speech
    - Real speech has tangents, self-corrections, trailing thoughts
 
-5. **SINGLE FLOW OUTPUT (CRITICAL)**
+6. **SINGLE FLOW OUTPUT (CRITICAL)**
    - Output must be ONE CONTINUOUS STRING
    - NO paragraph breaks (\n\n)
    - NO line breaks in the middle of speech
    - It should read like one natural spoken thought
    - This is how viral TikTok scripts work - one flow
 
-6. REPLACE GENERIC VOCABULARY
+7. REPLACE GENERIC VOCABULARY
    - If input has generic terms, replace with HER terms
    - "pussy" → her term | "dick" → her term | "orgasm" → her term
    - Her vocabulary makes it HERS, not generic content
 
-7. TEST EACH LINE
+8. TEST EACH LINE
    - Would she say this exact phrase?
    - Is this her vocabulary?
    - Is this her rhythm?
