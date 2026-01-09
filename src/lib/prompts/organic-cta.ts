@@ -281,7 +281,7 @@ export const CTA_SELECTION_GUIDE: Record<string, OrganicCTAType[]> = {
   vulnerability: ['emotional_bond', 'rhetorical_close', 'loyalty_reward'],
   direct_address: ['fantasy_invitation', 'direct_desire', 'emotional_bond'],
   exclusivity: ['exclusivity_signal', 'loyalty_reward', 'consequence_lock'],
-  challenge: ['qualifier_challenge', 'direct_desire', 'exclusivity_signal'],
+  // Note: 'challenge' hook type already defined above - parasocial lever uses same CTAs
 }
 
 /**
