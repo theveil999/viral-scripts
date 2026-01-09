@@ -182,6 +182,130 @@ function checkForAiTells(content: string): string[] {
   return found;
 }
 
+/**
+ * Common filler patterns that should not start scripts
+ */
+const LEADING_FILLER_PATTERNS = [
+  /^okay\s+so\s+like\s*,?\s*/i,
+  /^ok\s+so\s+like\s*,?\s*/i,
+  /^um+\s+okay\s+so\s+like\s*,?\s*/i,
+  /^um+\s+ok\s+so\s+like\s*,?\s*/i,
+  /^um+\s+so\s+like\s*,?\s*/i,
+  /^so\s+like\s*,?\s*/i,
+  /^okay\s+so\s*,?\s*/i,
+  /^ok\s+so\s*,?\s*/i,
+  /^um+\s+like\s*,?\s*/i,
+  /^um+\s+okay\s*,?\s*/i,
+  /^um+\s+ok\s*,?\s*/i,
+  /^um+\s*,?\s*/i,
+  /^like\s*,?\s*/i,
+  /^so\s*,?\s+/i,
+  /^okay\s*,?\s*/i,
+  /^ok\s*,?\s*/i,
+  /^yeah\s+so\s*,?\s*/i,
+  /^well\s+so\s*,?\s*/i,
+  /^honestly\s*,?\s*/i,
+  /^look\s*,?\s*/i,
+  /^listen\s*,?\s*/i,
+];
+
+function normalizeForComparison(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function getFirstWords(text: string, count: number): string[] {
+  const normalized = normalizeForComparison(text);
+  return normalized.split(' ').slice(0, count);
+}
+
+function startsWithWords(text: string, words: string[]): boolean {
+  const normalized = normalizeForComparison(text);
+  const pattern = words.join(' ');
+  return normalized.startsWith(pattern);
+}
+
+function findHookStart(script: string, hookWords: string[]): number {
+  const scriptNormalized = normalizeForComparison(script);
+  const hookPattern = hookWords.join(' ');
+  
+  const hookIndex = scriptNormalized.indexOf(hookPattern);
+  if (hookIndex === -1) return -1;
+  
+  let normalizedPos = 0;
+  for (let i = 0; i < script.length; i++) {
+    if (normalizedPos >= hookIndex) {
+      return i;
+    }
+    const char = script[i].toLowerCase();
+    if (/[a-z0-9\s]/.test(char)) {
+      if (char === ' ' || (i > 0 && script[i-1] !== ' ')) {
+        normalizedPos++;
+      }
+    }
+  }
+  return -1;
+}
+
+/**
+ * Remove leading fillers from a script while preserving the hook opener
+ * This ensures scripts start with their actual hook content, not filler words
+ */
+function preserveHookOpener(transformedScript: string, originalHook: string): string {
+  if (!transformedScript || !originalHook) return transformedScript;
+  
+  let script = transformedScript.trim();
+  
+  const hookWords = getFirstWords(originalHook, 5).filter(w => w.length > 0);
+  if (hookWords.length === 0) return script;
+  
+  const hookMatchWords = hookWords.slice(0, Math.min(4, hookWords.length));
+  
+  // Already starts with hook - return as is
+  if (startsWithWords(script, hookMatchWords)) {
+    return script;
+  }
+  
+  // Remove leading fillers iteratively
+  let previousScript = '';
+  let iterations = 0;
+  const maxIterations = 10;
+  
+  while (previousScript !== script && iterations < maxIterations) {
+    previousScript = script;
+    iterations++;
+    
+    for (const pattern of LEADING_FILLER_PATTERNS) {
+      const newScript = script.replace(pattern, '');
+      if (newScript !== script) {
+        script = newScript.trim();
+        break;
+      }
+    }
+  }
+  
+  // Check again after removing fillers
+  if (startsWithWords(script, hookMatchWords)) {
+    return script;
+  }
+  
+  // Find where the hook actually starts in the script
+  const hookStartIndex = findHookStart(script, hookMatchWords);
+  
+  if (hookStartIndex > 0 && hookStartIndex < 100) {
+    const trimmedScript = script.slice(hookStartIndex).trim();
+    if (startsWithWords(trimmedScript, hookMatchWords)) {
+      console.log(`[Voice Transform] Trimmed ${hookStartIndex} chars of leading filler to preserve hook`);
+      return trimmedScript;
+    }
+  }
+  
+  return script;
+}
+
 // ============================================================================
 // STAGE 1: TOPIC SELECTION
 // ============================================================================
@@ -451,7 +575,15 @@ Return ONLY valid JSON:
 
   const responseText =
     response.content[0].type === "text" ? response.content[0].text : "";
-  return parseJsonResponse<TransformedScript>(responseText);
+  const result = parseJsonResponse<TransformedScript>(responseText);
+  
+  // Apply hook opener preservation - remove leading fillers like "Okay so like"
+  // while keeping the original hook opener intact
+  if (result.transformedContent && script.hook) {
+    result.transformedContent = preserveHookOpener(result.transformedContent, script.hook);
+  }
+  
+  return result;
 }
 
 // ============================================================================
