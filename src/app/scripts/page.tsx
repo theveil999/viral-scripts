@@ -66,7 +66,7 @@ export default function ScriptsPage() {
           script_archetype,
           parasocial_levers,
           word_count,
-          duration_estimate,
+          duration_seconds,
           voice_fidelity_score,
           validation_passed,
           status,
