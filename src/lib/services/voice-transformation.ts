@@ -81,14 +81,76 @@ function parseTransformationResponse(text: string): TransformedScript[] {
 }
 
 /**
+ * Common filler patterns that should not start scripts
+ */
+const LEADING_FILLER_PATTERNS = [
+  /^okay\s+so\s+like,?\s*/i,
+  /^so\s+like,?\s*/i,
+  /^um,?\s+okay\s+so\s+like,?\s*/i,
+  /^um,?\s+so\s+like,?\s*/i,
+  /^um,?\s+like,?\s*/i,
+  /^like,?\s*/i,
+  /^okay\s+so,?\s*/i,
+  /^um,?\s*/i,
+]
+
+/**
+ * Remove leading fillers from a script while preserving the hook opener
+ * This ensures scripts start with their actual hook content, not filler words
+ */
+function preserveHookOpener(transformedScript: string, originalHook: string): string {
+  let script = transformedScript.trim()
+  
+  // Extract first few words from hook (ignoring case and punctuation)
+  const hookWords = originalHook.toLowerCase().replace(/[^a-z\s]/g, '').split(/\s+/).slice(0, 4)
+  const hookPattern = hookWords.join('\\s+')
+  
+  // Check if script already starts with hook opener (case insensitive)
+  const hookRegex = new RegExp(`^${hookPattern}`, 'i')
+  if (hookRegex.test(script.toLowerCase().replace(/[^a-z\s]/g, ''))) {
+    return script // Already starts correctly
+  }
+  
+  // Remove leading fillers until we hit actual content
+  let previousScript = ''
+  while (previousScript !== script) {
+    previousScript = script
+    for (const pattern of LEADING_FILLER_PATTERNS) {
+      script = script.replace(pattern, '')
+    }
+    script = script.trim()
+  }
+  
+  // If after removing fillers it starts with the hook, we're good
+  if (hookRegex.test(script.toLowerCase().replace(/[^a-z\s]/g, ''))) {
+    return script
+  }
+  
+  // If hook opener is completely missing, prepend it (rare case)
+  // Only do this if the hook is short and specific
+  if (hookWords.length >= 3 && hookWords[0] !== 'i' && hookWords[0] !== 'a') {
+    // Don't prepend generic hooks starting with "I" or "A"
+    return script
+  }
+  
+  return script
+}
+
+/**
  * Validate and clean transformed script
  */
 function processTransformedScript(script: TransformedScript): TransformedScript {
+  // Apply hook opener preservation
+  const cleanedScript = preserveHookOpener(
+    script.transformed_script || '',
+    script.original_hook || ''
+  )
+  
   return {
     script_index: script.script_index || 0,
     original_hook: script.original_hook || '',
-    transformed_script: script.transformed_script || '',
-    word_count: script.word_count || script.transformed_script?.split(/\s+/).length || 0,
+    transformed_script: cleanedScript,
+    word_count: cleanedScript?.split(/\s+/).length || 0,
     changes_made: Array.isArray(script.changes_made) ? script.changes_made : [],
     voice_fidelity_score: typeof script.voice_fidelity_score === 'number'
       ? Math.min(100, Math.max(0, script.voice_fidelity_score))
