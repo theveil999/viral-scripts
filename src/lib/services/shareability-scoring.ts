@@ -164,8 +164,10 @@ export async function scoreShareability(
     },
   }))
 
-  // Calculate batch stats
-  const avgScore = scores.reduce((sum, s) => sum + s.shareability.score, 0) / scores.length
+  // Calculate batch stats (guard against division by zero)
+  const avgScore = scores.length > 0
+    ? scores.reduce((sum, s) => sum + s.shareability.score, 0) / scores.length
+    : 0
   const highPotentialCount = scores.filter(
     s => s.shareability.viral_potential === 'high' || s.shareability.viral_potential === 'viral'
   ).length
