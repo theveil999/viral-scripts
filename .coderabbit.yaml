@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 # CodeRabbit Configuration
 # https://docs.coderabbit.ai/guides/configure-coderabbit
 
@@ -10,6 +11,10 @@ reviews:
     drafts: false
     base_branches:
       - main
+    # Ignore patterns - don't review auto-generated or config files
+    ignore_title_keywords:
+      - "WIP"
+      - "DO NOT MERGE"
 
   # Review profile - thorough but not pedantic
   profile: "chill"
@@ -61,20 +66,5 @@ chat:
   # Enable chat in PR comments
   auto_reply: true
 
-# Ignore patterns
-path_filters:
-  # Don't review auto-generated or config files
-  - "!**/*.lock"
-  - "!**/package-lock.json"
-  - "!**/*.min.js"
-  - "!**/node_modules/**"
-  - "!**/.next/**"
-  - "!**/dist/**"
-  - "!**/*.d.ts"
-  
-  # Include everything else
-  - "**/*"
-
 # Early access features
 early_access: true
-
