@@ -154,12 +154,12 @@ export interface PipelineResult {
 
 /**
  * Utility function for retrying async operations with exponential backoff
+ * Note: Does NOT call onStageError - that's handled by executeStage to avoid double-invocation
  */
 async function withRetry<T>(
   operation: () => Promise<T>,
   stage: PipelineStage,
-  maxRetries: number = 2,
-  callbacks?: PipelineCallbacks
+  maxRetries: number = 2
 ): Promise<T> {
   let lastError: Error | undefined
   
@@ -177,7 +177,7 @@ async function withRetry<T>(
     }
   }
   
-  callbacks?.onStageError?.(stage, lastError!)
+  // Don't call onStageError here - executeStage handles it to prevent double-invocation
   throw new StageFailedError(stage, lastError!)
 }
 
@@ -210,6 +210,7 @@ export async function runPipeline(
   const supabase = createAdminClient()
 
   // Helper to execute stage with optional retry
+  // Note: Only use for critical stages that should fail the pipeline on error
   const executeStage = async <T>(
     stage: PipelineStage,
     operation: () => Promise<T>
@@ -218,7 +219,7 @@ export async function runPipeline(
     
     try {
       const result = retryFailedStages 
-        ? await withRetry(operation, stage, maxRetries, callbacks)
+        ? await withRetry(operation, stage, maxRetries)
         : await operation()
       return result
     } catch (error) {
@@ -260,24 +261,27 @@ export async function runPipeline(
   let totalTokens = 0
 
   // ===================
-  // STAGE 1: Corpus Retrieval
+  // STAGE 1: Corpus Retrieval (non-critical - failures don't stop pipeline)
   // ===================
   console.log('Stage 1: Corpus Retrieval...')
   const corpusStart = Date.now()
+  callbacks?.onStageStart?.('corpus_retrieval')
 
   let corpusMatches = 0
   let avgSimilarity = 0
+  let corpusRetrievalFailed = false
 
   if (model.embedding) {
     try {
-      const corpusResult = await executeStage('corpus_retrieval', () => 
-        retrieveRelevantCorpus(modelId, { limit: corpusLimit })
-      )
+      const corpusResult = await retrieveRelevantCorpus(modelId, { limit: corpusLimit })
       corpusMatches = corpusResult.matches.length
       avgSimilarity = corpusResult.retrieval_stats.avg_similarity
     } catch (err) {
-      // Corpus retrieval is non-critical, log and continue
-      console.warn('Corpus retrieval failed (non-critical):', err)
+      // Corpus retrieval is non-critical, log error and continue
+      corpusRetrievalFailed = true
+      const error = err instanceof Error ? err : new Error(String(err))
+      console.warn('Corpus retrieval failed (non-critical):', error.message)
+      callbacks?.onStageError?.('corpus_retrieval', error)
     }
   }
 
@@ -286,7 +290,11 @@ export async function runPipeline(
     avg_similarity: avgSimilarity,
     time_ms: Date.now() - corpusStart,
   }
-  callbacks?.onStageComplete?.('corpus_retrieval', stages.corpus_retrieval)
+  
+  // Only call onStageComplete if the stage didn't fail (avoid conflicting callbacks)
+  if (!corpusRetrievalFailed) {
+    callbacks?.onStageComplete?.('corpus_retrieval', stages.corpus_retrieval)
+  }
 
   // ===================
   // STAGE 2: Hook Generation (with variations + PCM tracking)
