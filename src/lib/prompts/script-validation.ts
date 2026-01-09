@@ -1,3 +1,6 @@
+/**
+ * @file Script validation prompt builder
+ */
 import type { VoiceProfile } from '../supabase/types'
 import type { TransformedScript } from '../services/voice-transformation'
 

@@ -1,3 +1,7 @@
+/**
+ * @fileoverview API route: models/[id]/scripts/expand
+ * @module api/models/[id]/scripts/expand
+ */
 import { NextRequest, NextResponse } from 'next/server'
 import { expandScripts } from '@/lib/services/script-expansion'
 import type { GeneratedHook } from '@/lib/services/hook-generation'

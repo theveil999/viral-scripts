@@ -1,3 +1,7 @@
+/**
+ * @fileoverview script-pipeline service
+ * @module lib/services/script-pipeline
+ */
 import { createAdminClient } from '../supabase/admin'
 import { retrieveRelevantCorpus } from './corpus-retrieval'
 import { generateHooks, type GeneratedHook, type HookVariationSet } from './hook-generation'

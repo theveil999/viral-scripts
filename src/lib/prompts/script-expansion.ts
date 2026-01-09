@@ -1,3 +1,6 @@
+/**
+ * @file Script expansion prompt builder
+ */
 import type { VoiceProfile } from '../supabase/types'
 import type { CorpusMatch } from '../services/corpus-retrieval'
 import type { GeneratedHook } from '../services/hook-generation'

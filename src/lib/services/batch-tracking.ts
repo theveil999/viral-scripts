@@ -1,3 +1,7 @@
+/**
+ * @fileoverview batch-tracking service
+ * @module lib/services/batch-tracking
+ */
 import { createAdminClient } from '../supabase/admin'
 import type { PipelineResult, StageStats } from './script-pipeline'
 

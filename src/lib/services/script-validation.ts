@@ -1,3 +1,7 @@
+/**
+ * @fileoverview script-validation service
+ * @module lib/services/script-validation
+ */
 import Anthropic from '@anthropic-ai/sdk'
 import { createAdminClient } from '../supabase/admin'
 import { buildValidationPrompt } from '../prompts/script-validation'

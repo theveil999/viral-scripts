@@ -1,3 +1,7 @@
+/**
+ * @fileoverview API route: extract-profile
+ * @module api/extract-profile
+ */
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { extractVoiceProfile } from '@/lib/services/profile-extraction'

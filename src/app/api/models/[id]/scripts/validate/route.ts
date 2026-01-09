@@ -1,3 +1,7 @@
+/**
+ * @fileoverview API route: models/[id]/scripts/validate
+ * @module api/models/[id]/scripts/validate
+ */
 import { NextRequest, NextResponse } from 'next/server'
 import { validateScripts } from '@/lib/services/script-validation'
 import type { TransformedScript } from '@/lib/services/voice-transformation'

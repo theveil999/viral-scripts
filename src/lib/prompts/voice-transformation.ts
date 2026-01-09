@@ -1,3 +1,6 @@
+/**
+ * @file Voice transformation prompt builder
+ */
 import type { VoiceProfile } from '../supabase/types'
 import type { ExpandedScript } from '../services/script-expansion'
 

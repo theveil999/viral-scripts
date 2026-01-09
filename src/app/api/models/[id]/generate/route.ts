@@ -1,3 +1,7 @@
+/**
+ * @fileoverview API route: models/[id]/generate
+ * @module api/models/[id]/generate
+ */
 import { NextRequest, NextResponse } from 'next/server'
 import { runPipeline } from '@/lib/services/script-pipeline'
 import type { TargetDuration } from '@/lib/prompts/script-expansion'

@@ -1,3 +1,7 @@
+/**
+ * @fileoverview API route: models/[id]/corpus
+ * @module api/models/[id]/corpus
+ */
 import { NextRequest, NextResponse } from 'next/server'
 import { retrieveRelevantCorpus } from '@/lib/services/corpus-retrieval'
 

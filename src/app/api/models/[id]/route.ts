@@ -1,3 +1,7 @@
+/**
+ * @fileoverview API route: models/[id]
+ * @module api/models/[id]
+ */
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
