@@ -1,3 +1,7 @@
+/**
+ * @fileoverview script-expansion service
+ * @module lib/services/script-expansion
+ */
 import Anthropic from '@anthropic-ai/sdk'
 import { createAdminClient } from '../supabase/admin'
 import { retrieveRelevantCorpus } from './corpus-retrieval'

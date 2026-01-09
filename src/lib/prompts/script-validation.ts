@@ -1,3 +1,7 @@
+/**
+ * @fileoverview script-validation prompt template
+ * @module lib/prompts/script-validation
+ */
 import type { VoiceProfile } from '../supabase/types'
 import type { TransformedScript } from '../services/voice-transformation'
 
@@ -43,7 +47,8 @@ export function buildValidationPrompt(params: ValidationParams): string {
   const sampleSpeechSection = sampleSpeech
     .slice(0, 5)
     .map((quote, i) => `${i + 1}. "${quote}"`)
-    .join('\n')
+    .join('
+')
 
   // Boundaries
   const boundaries = voiceProfile.boundaries as Record<string, unknown>
@@ -51,11 +56,13 @@ export function buildValidationPrompt(params: ValidationParams): string {
   const topicsToAvoid = (boundaries?.topics_to_avoid as string[]) || []
 
   const hardNosSection = hardNos.length > 0
-    ? hardNos.map((n) => `- "${n}"`).join('\n')
+    ? hardNos.map((n) => `- "${n}"`).join('
+')
     : '- None specified'
 
   const topicsSection = topicsToAvoid.length > 0
-    ? topicsToAvoid.map((t) => `- "${t}"`).join('\n')
+    ? topicsToAvoid.map((t) => `- "${t}"`).join('
+')
     : '- None specified'
 
   // CRITICAL: Audience targeting data
@@ -66,7 +73,8 @@ export function buildValidationPrompt(params: ValidationParams): string {
   // Parasocial config - levers to avoid
   const parasocialAvoid = voiceProfile.parasocial_config?.avoid || voiceProfile.parasocial?.avoid || []
   const parasocialAvoidSection = parasocialAvoid.length > 0
-    ? parasocialAvoid.map((lever: string) => `- ${lever.replace(/_/g, ' ')}`).join('\n')
+    ? parasocialAvoid.map((lever: string) => `- ${lever.replace(/_/g, ' ')}`).join('
+')
     : '- None specified'
 
   // Scripts section
@@ -77,7 +85,9 @@ Script ${i + 1}:
 "${script.transformed_script}"
 ---`
     })
-    .join('\n\n')
+    .join('
+
+')
 
   return `You are a script quality validator. Score each script for voice fidelity, audience targeting, and flag issues.
 
@@ -139,7 +149,7 @@ Specificity Check (each issue = -5 points):
 - Viral scripts are SPECIFIC, not vague
 
 Structure Check (each issue = -10 points):
-- Has paragraph breaks (\\n\\n) = FAIL for structure
+- Has paragraph breaks (\n\n) = FAIL for structure
 - Multiple line breaks = should be ONE continuous flow
 - Too long (>90 words for long scripts) = trim needed
 

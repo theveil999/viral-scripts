@@ -1,3 +1,7 @@
+/**
+ * @fileoverview script-expansion prompt template
+ * @module lib/prompts/script-expansion
+ */
 import type { VoiceProfile } from '../supabase/types'
 import type { CorpusMatch } from '../services/corpus-retrieval'
 import type { GeneratedHook } from '../services/hook-generation'
@@ -192,12 +196,14 @@ export function buildScriptExpansionPrompt(params: ScriptExpansionParams): strin
   const parasocialStrengths = voiceProfile.parasocial_config?.strengths || voiceProfile.parasocial?.strengths || []
   const parasocialSection = parasocialStrengths
     .map((lever: string) => `- ${lever.replace(/_/g, ' ')}`)
-    .join('\n')
+    .join('
+')
 
   // CRITICAL: Parasocial levers to AVOID
   const parasocialAvoid = voiceProfile.parasocial_config?.avoid || voiceProfile.parasocial?.avoid || []
   const parasocialAvoidSection = parasocialAvoid.length > 0
-    ? parasocialAvoid.map((lever: string) => `- ${lever.replace(/_/g, ' ')}`).join('\n')
+    ? parasocialAvoid.map((lever: string) => `- ${lever.replace(/_/g, ' ')}`).join('
+')
     : '- None specified'
 
   // CRITICAL: Audience targeting data
@@ -229,7 +235,8 @@ Act Terms:
 - Orgasm: ${actEuphemisms?.orgasm?.join(', ') || 'finishing'}
 
 Her Signature Lines:
-${signatureSpicyPhrases.length > 0 ? signatureSpicyPhrases.map(p => `- "${p}"`).join('\n') : '- Use her sample speech as reference'}
+${signatureSpicyPhrases.length > 0 ? signatureSpicyPhrases.map(p => `- "${p}"`).join('
+') : '- Use her sample speech as reference'}
 
 **USE HER VOCABULARY, NOT GENERIC TERMS**
 ` : ''
@@ -237,7 +244,8 @@ ${signatureSpicyPhrases.length > 0 ? signatureSpicyPhrases.map(p => `- "${p}"`).
   const sampleSpeech = voiceProfile.sample_speech
     ?.slice(0, 5)
     .map((quote, i) => `${i + 1}. "${quote}"`)
-    .join('\n') || 'No samples available'
+    .join('
+') || 'No samples available'
 
   const boundaries = voiceProfile.boundaries as Record<string, unknown>
   const hardNos = (boundaries?.hard_nos as string[])?.join(', ') || 'none specified'
@@ -255,7 +263,9 @@ Full Script:
 Structure Analysis:
 ${analyzeCorpusStructure(match)}`
     })
-    .join('\n\n')
+    .join('
+
+')
 
   // Build hooks section
   const hooksSection = hooks
@@ -265,7 +275,9 @@ ${analyzeCorpusStructure(match)}`
    Levers: ${hook.parasocial_levers.join(', ') || 'general'}
    Why it works: ${hook.why_it_works}`
     })
-    .join('\n\n')
+    .join('
+
+')
 
   return `You are a viral script writer for short-form video. Expand these hooks into full scripts for ${modelName}.
 
@@ -419,7 +431,8 @@ ${ctaGuidance}
    Examples: "now follow me i miss you", "I need that in my life"
 
 **⚠️ NEVER USE THESE (SALESY / PROMOTIONAL):**
-${CTA_ANTI_PATTERNS.map(p => `- "${p}"`).join('\n')}
+${CTA_ANTI_PATTERNS.map(p => `- "${p}"`).join('
+')}
 
 The CTA should feel like a NATURAL continuation of her speech, not a promotional ask.
 It makes viewers feel CHOSEN, not sold to.
@@ -447,7 +460,7 @@ Return a JSON array of expanded scripts:
   }
 ]
 
-**CRITICAL**: The "script" field must be ONE CONTINUOUS STRING with no \\n line breaks. It should read like someone speaking naturally without stopping.
+**CRITICAL**: The "script" field must be ONE CONTINUOUS STRING with no \n line breaks. It should read like someone speaking naturally without stopping.
 
 **CTA REQUIREMENT**: Each script's closer should use one of the organic CTA patterns. Tag which type in "cta_type".
 

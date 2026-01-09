@@ -1,3 +1,7 @@
+/**
+ * @fileoverview API route: models/extract
+ * @module api/models/extract
+ */
 import { NextRequest, NextResponse } from "next/server";
 import {
   extractVoiceProfile,

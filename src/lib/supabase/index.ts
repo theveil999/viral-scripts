@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Supabase index
+ * @module lib/supabase/index
+ */
 // Re-export all Supabase utilities
 export { createClient } from "./client";
 export { createClient as createServerClient } from "./server";

@@ -1,3 +1,7 @@
+/**
+ * @fileoverview voice-transformation service
+ * @module lib/services/voice-transformation
+ */
 import Anthropic from '@anthropic-ai/sdk'
 import { createAdminClient } from '../supabase/admin'
 import { buildVoiceTransformationPrompt } from '../prompts/voice-transformation'

@@ -1,3 +1,7 @@
+/**
+ * @fileoverview API route: models
+ * @module api/models
+ */
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { toDbVoiceProfile, ExtractedVoiceProfile } from "@/lib/services/profile-extraction";

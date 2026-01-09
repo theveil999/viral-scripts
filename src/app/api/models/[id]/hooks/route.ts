@@ -1,3 +1,7 @@
+/**
+ * @fileoverview API route: models/[id]/hooks
+ * @module api/models/[id]/hooks
+ */
 import { NextRequest, NextResponse } from 'next/server'
 import { generateHooks } from '@/lib/services/hook-generation'
 

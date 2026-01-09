@@ -1,3 +1,7 @@
+/**
+ * @fileoverview API route: scripts/generate
+ * @module api/scripts/generate
+ */
 import { NextRequest, NextResponse } from "next/server";
 import {
   generateScripts,

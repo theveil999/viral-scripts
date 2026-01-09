@@ -1,3 +1,7 @@
+/**
+ * @fileoverview API route: models/[id]/scripts/transform
+ * @module api/models/[id]/scripts/transform
+ */
 import { NextRequest, NextResponse } from 'next/server'
 import { transformVoice } from '@/lib/services/voice-transformation'
 import type { ExpandedScript } from '@/lib/services/script-expansion'
