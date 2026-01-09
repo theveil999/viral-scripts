@@ -359,8 +359,8 @@ Return a JSON array of transformed scripts:
 [
   {
     "script_index": 1,
-    "original_hook": "The original hook text",
-    "transformed_script": "The SINGLE CONTINUOUS FLOW script in her exact voice no line breaks just one thought that flows naturally like she's actually talking to camera you know like real speech not paragraphs okay?",
+    "original_hook": "I need a man who grabs my chin",
+    "transformed_script": "I need a man who like grabs my chin and calls me good girl, you know? Like fuck, I'm literally done for, I don't know. Like that shit just makes me melt into a puddle right there, you lug nut.",
     "word_count": 52,
     "changes_made": [
       "Changed 'I mean honestly' to 'Like um'",
