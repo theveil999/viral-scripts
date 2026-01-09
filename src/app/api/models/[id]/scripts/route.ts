@@ -119,6 +119,8 @@ export async function PATCH(
 
     if (status === 'approved') {
       updateData.approved_at = new Date().toISOString()
+    } else if (status === 'posted') {
+      updateData.posted_at = new Date().toISOString()
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
