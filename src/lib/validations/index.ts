@@ -95,12 +95,20 @@ export const transformScriptsSchema = z.object({
   scripts: z.array(expandedScriptSchema).min(1, 'At least one script is required'),
 })
 
+// Bug fix: Schema must match TransformedScript interface requirements
+export const transformedScriptSchema = z.object({
+  script_index: z.number().int().nonnegative(),
+  original_hook: z.string().min(1),
+  transformed_script: z.string().min(1),
+  word_count: z.number().int().positive(),
+  changes_made: z.array(z.string()),
+  voice_fidelity_score: z.number().min(0).max(1),
+  ai_tells_removed: z.array(z.string()),
+  voice_elements_added: z.array(z.string()),
+})
+
 export const validateScriptsSchema = z.object({
-  scripts: z.array(z.object({
-    transformed_script: z.string().min(1),
-    hook: z.string().optional(),
-    word_count: z.number().int().optional(),
-  })).min(1, 'At least one script is required'),
+  scripts: z.array(transformedScriptSchema).min(1, 'At least one script is required'),
 })
 
 // ===================
