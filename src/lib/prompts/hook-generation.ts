@@ -297,6 +297,18 @@ ${signatureSpicyPhrases.length > 0 ? signatureSpicyPhrases.map(p => `- "${p}"`).
     ? recentHooks.map((h) => `- "${h}"`).join('\n')
     : 'None - this is the first batch'
 
+  // Extract brand anchors (CRITICAL for unique content)
+  const content = voiceProfile.content as Record<string, unknown>
+  const brandAnchors = (content?.brand_anchors as string[]) || []
+  const brandAnchorsSection = brandAnchors.length > 0
+    ? `Brand Obsessions (USE THESE - they're HER unique differentiators):\n${brandAnchors.map(b => `- ${b}`).join('\n')}`
+    : ''
+
+  // Extract turn-ons for fantasy hooks
+  const turnOns = (spicy?.turn_ons_discussed as string[]) || []
+  const herType = (spicy?.her_type as string) || ''
+  const bedroomDynamic = (spicy?.bedroom_dynamic as string) || ''
+  
   // Build audience targeting section (CRITICAL for correct content direction)
   const audienceSection = `
 ## ⚠️ CRITICAL: TARGET AUDIENCE (READ THIS CAREFULLY)
@@ -312,6 +324,44 @@ HOW FANS TALK TO HER: ${howFansTalk}
 - DO NOT write content that sounds like a woman talking to her girlfriends
 - DO write content where SHE is speaking TO or ABOUT men in a way that makes male viewers feel seen
 - The viewer should imagine: "She's talking about ME" or "I wish she'd say this to ME"
+
+## 🎯 VIRAL OF CONVERSION PATTERNS (MUST USE)
+
+The hooks that convert viewers to OnlyFans subscribers follow these patterns:
+
+**1. FANTASY INVITATION (highest converting)**
+Pattern: "If you're the type who [specific behavior]... [I need you / marry me / you fucked up]"
+- "If you're the type who grabs me by the neck and whispers 'good girl'? Marry me right now."
+- Makes viewer feel CHOSEN and imagine being that person
+
+**2. QUALIFIER CHALLENGE**  
+Pattern: "If you [do/don't do X]... [judgment/reward]"
+- "If you do this without being asked... you're the one"
+- Challenges viewer to prove they're worthy
+
+**3. CONSEQUENCE LOCK**
+Pattern: "You [did X]... [possessive consequence]"
+- "You fucked up, okay? Because now I'm never letting you go"
+- Creates parasocial attachment
+
+**4. SPECIFIC DESIRE**
+Pattern: "I want a man who [very specific behavior/trait]"  
+- "I want a man who will devour my pink taco like his life depends on it"
+- NOT generic - must be vivid and specific
+
+${turnOns.length > 0 ? `
+## 🔥 HER TURN-ONS (Use these for fantasy hooks)
+${turnOns.map(t => `- ${t}`).join('\n')}
+${herType ? `Her type: ${herType}` : ''}
+${bedroomDynamic ? `Bedroom dynamic: ${bedroomDynamic}` : ''}
+` : ''}
+
+${brandAnchorsSection ? `
+## 🏷️ BRAND ANCHORS (Her unique differentiators)
+${brandAnchorsSection}
+These are things ONLY she can talk about - use them to make hooks unique to her.
+Example: If she's obsessed with Taco Bell, hooks can reference it for unique content no other creator can copy.
+` : ''}
 `
 
   return `You are a viral hook writer for short-form video content. Generate ${count} unique hooks for ${modelName}.
@@ -366,6 +416,55 @@ ${frameworksSection}
 8. Be SPECIFIC - "soaked from his voice" not "turned on by him"
 9. Vary the structure - don't repeat the same pattern
 10. NO hashtags, NO emojis, NO stage directions
+
+## 🚫 HOOKS THAT DON'T CONVERT (AVOID THESE)
+
+❌ Self-focused hooks that brag about HER (makes viewer feel inadequate)
+   BAD: "I performed at Carnegie Hall so your guitar skills don't impress me"
+   
+❌ Generic hooks any creator could say
+   BAD: "I love good music during sex"
+   
+❌ Hooks that talk AT women instead of TO men
+   BAD: "Ladies, do you ever feel like..." (unless her audience is women)
+
+❌ Hooks about HER achievements without viewer involvement
+   BAD: "I'm talented at X" 
+
+## ✅ HOOKS THAT CONVERT (USE THESE PATTERNS)
+
+✅ "If you're the type who [specific]... [fantasy invitation]"
+   GOOD: "If you grab my chin and call me good girl? You fucked up, I'm keeping you"
+
+✅ Make viewer imagine being DESIRED by her
+   GOOD: "I need a man who will [specific desire]"
+
+✅ Her unique differentiators + sexual tension
+   GOOD: "My fantasy is Taco Bell at 2am after we've been going at it all night"
+
+✅ Specific imagery from HER turn-ons
+   GOOD: "When he whispers 'that's my good girl' I literally cannot function"
+
+## EXPLICITNESS LEVEL: ${explicitnessLevel}
+
+${explicitnessLevel === 'full_send' ? `
+🔥 FULL SEND MODE: Be explicit, bold, and unapologetic.
+- Use her sexual vocabulary directly
+- Reference specific sex acts she's discussed
+- Don't censor or hedge
+- The corpus shows explicit hooks perform BEST for OF conversion
+- Examples: "I want to be used like...", "When he [explicit act]...", "My pink taco..."
+` : explicitnessLevel === 'medium' ? `
+⚡ MEDIUM MODE: Suggestive and flirty but not graphic.
+- Imply without stating directly
+- Use euphemisms and innuendo
+- Build tension through suggestion
+` : `
+💫 SUBTLE MODE: Flirty and teasing, clean language.
+- Focus on emotional connection
+- Romantic rather than sexual
+- Safe for most platforms
+`}
 
 ## HOOK QUALITY CHECKLIST (each hook must pass ALL)
 

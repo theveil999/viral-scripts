@@ -52,6 +52,7 @@ export interface VoiceProfile {
     differentiator: string;
     strong_opinions_on: string[];
     trends_she_hates: string[];
+    brand_anchors?: string[]; // CRITICAL: Unique brand obsessions like Taco Bell
   };
   audience: {
     target_viewer_description: string;
@@ -64,6 +65,25 @@ export interface VoiceProfile {
     flirting_style: string;
     turn_ons_discussed: string[];
     her_type: string;
+    bedroom_dynamic?: string; // dominant/submissive/switch
+    sexual_vocabulary?: {
+      body_part_euphemisms?: {
+        female_genitalia?: string[];
+        male_genitalia?: string[];
+        breasts?: string[];
+        butt_anal?: string[];
+      };
+      act_euphemisms?: {
+        oral_giving?: string[];
+        oral_receiving?: string[];
+        intercourse?: string[];
+        orgasm?: string[];
+        masturbation?: string[];
+        ejaculation?: string[];
+      };
+      intensity_markers?: string[];
+      signature_spicy_phrases?: string[];
+    };
   };
   boundaries: {
     hard_nos: string[];

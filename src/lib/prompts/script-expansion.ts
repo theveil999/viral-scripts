@@ -138,6 +138,15 @@ ${signatureSpicyPhrases.length > 0 ? signatureSpicyPhrases.map(p => `- "${p}"`).
     .map((quote, i) => `${i + 1}. "${quote}"`)
     .join('\n') || 'No samples available'
 
+  // Extract brand anchors (CRITICAL for unique content)
+  const content = voiceProfile.content as Record<string, unknown>
+  const brandAnchors = (content?.brand_anchors as string[]) || []
+  
+  // Extract turn-ons for fantasy content
+  const turnOns = (spicy?.turn_ons_discussed as string[]) || []
+  const herType = (spicy?.her_type as string) || ''
+  const bedroomDynamic = (spicy?.bedroom_dynamic as string) || ''
+
   const boundaries = voiceProfile.boundaries as Record<string, unknown>
   const hardNos = (boundaries?.hard_nos as string[])?.join(', ') || 'none specified'
   const topicsToAvoid = (boundaries?.topics_to_avoid as string[])?.join(', ') || 'none specified'
@@ -212,7 +221,24 @@ ${parasocialAvoidSection}
 
 Sample Speech (MATCH THIS EXACT VOICE):
 ${sampleSpeech}
+${brandAnchors.length > 0 ? `
+## 🏷️ BRAND ANCHORS (Her unique differentiators - USE THESE)
 
+${brandAnchors.map(b => `- ${b}`).join('\n')}
+
+These are things ONLY ${modelName} can talk about. Weave them into scripts naturally.
+Example: If she's obsessed with Taco Bell, a script could involve Taco Bell in a fantasy scenario.
+This makes content unique and impossible for other creators to copy.
+` : ''}
+${turnOns.length > 0 ? `
+## 🔥 HER TURN-ONS (Use for specific, vivid imagery)
+
+${turnOns.map(t => `- ${t}`).join('\n')}
+${herType ? `Her type: ${herType}` : ''}
+${bedroomDynamic ? `Bedroom dynamic: ${bedroomDynamic}` : ''}
+
+Scripts should reference these SPECIFIC turn-ons, not generic desires.
+` : ''}
 ## SCRIPT STRUCTURE FRAMEWORK
 
 Every script follows this arc:
@@ -279,11 +305,57 @@ Sentence count: ${duration.sentences} sentences
    - GOOD: "when he grabs my chin and makes me look at him"
    - Specific imagery = viral, generic statements = forgettable
 
-6. EXPLICITNESS MATCH
-   - Match her level: ${explicitnessLevel}
-   - If full_send: don't censor, be bold
-   - If medium: suggestive but not explicit
-   - If subtle: keep it clean but flirty
+6. EXPLICITNESS MATCH: ${explicitnessLevel}
+   ${explicitnessLevel === 'full_send' ? `
+   🔥 FULL SEND MODE - Be explicit and bold:
+   - Use her sexual vocabulary directly (from her spicy.sexual_vocabulary)
+   - Reference specific sex acts, positions, scenarios
+   - Don't censor words - if she says "fuck", write "fuck"
+   - Include vivid physical descriptions
+   - The corpus shows explicit scripts perform BEST for OF conversion
+   - Make viewers FEEL the fantasy, not just understand it
+   ` : explicitnessLevel === 'medium' ? `
+   ⚡ MEDIUM MODE - Suggestive and teasing:
+   - Use innuendo and euphemisms  
+   - Build sexual tension without being graphic
+   - Leave some things to imagination
+   ` : `
+   💫 SUBTLE MODE - Flirty and romantic:
+   - Focus on emotional connection
+   - Implied rather than stated
+   - Safe for all platforms
+   `}
+
+## 🎯 VIRAL CONVERSION PATTERNS (MUST USE IN EVERY SCRIPT)
+
+**THE VIEWER MUST FEEL CHOSEN, NOT SOLD TO**
+
+1. **FANTASY INVITATION** - Qualify the viewer as special
+   - "If you're the type who [specific behavior]... [consequence]"
+   - "If you do this without being asked... marry me right now"
+   - Makes viewer imagine being the person she's describing
+
+2. **CONSEQUENCE LOCK** - Possessive closers that create attachment
+   - "You fucked up, okay? Because now I'm never letting you go"
+   - "Till death do us part, motherfucker"
+   - Creates parasocial bond
+
+3. **SPECIFIC DESIRE** - Her actual turn-ons, not generic statements
+   - Reference her stated turn-ons from voice profile
+   - Use her vocabulary for body parts and acts
+   - "When he grabs my chin and whispers 'good girl'" not "when he's dominant"
+
+4. **RHETORICAL CLOSE** - Invites agreement without asking
+   - "Am I asking for too much here?"
+   - "Is that so hard?"
+
+## 🚫 SCRIPTS THAT DON'T CONVERT (AVOID)
+
+❌ Scripts about HER being impressive (makes viewer feel inadequate)
+❌ Generic relationship advice that could be anyone
+❌ Content that sounds like girlfriends talking to each other
+❌ Scripts that focus on her talents/achievements without viewer involvement
+❌ Vague, non-specific content with no vivid imagery
 
 ## BOUNDARIES (DO NOT INCLUDE)
 
