@@ -281,7 +281,7 @@ export const CTA_SELECTION_GUIDE: Record<string, OrganicCTAType[]> = {
   vulnerability: ['emotional_bond', 'rhetorical_close', 'loyalty_reward'],
   direct_address: ['fantasy_invitation', 'direct_desire', 'emotional_bond'],
   exclusivity: ['exclusivity_signal', 'loyalty_reward', 'consequence_lock'],
-  // Note: 'challenge' hook type already defined above - parasocial lever uses same CTAs
+  // Note: parasocial lever 'challenge' intentionally shares same CTAs as hook type 'challenge' above
 }
 
 /**
@@ -339,19 +339,19 @@ export function buildCTAGuidance(params: CTAInjectionParams): string {
     : [preferredCtaType]
   
   // Build templates section
-  const templatesSection = recommendedCTAs
-    .filter(cta => cta !== 'none')
-    .map(cta => {
-      const data = ORGANIC_CTA_TEMPLATES[cta]
-      return `
-### ${cta.toUpperCase().replace('_', ' ')}
+  const filteredCTAs = recommendedCTAs.filter(cta => cta !== 'none')
+  const templatesSection = filteredCTAs.length > 0
+    ? filteredCTAs.map(cta => {
+        const data = ORGANIC_CTA_TEMPLATES[cta]
+        return `
+### ${cta.toUpperCase().replaceAll('_', ' ')}
 ${data.description}
 Pattern: ${data.pattern}
 Examples:
 ${data.templates.slice(0, 2).map(t => `- "${t}"`).join('\n')}
 Use when: ${data.use_when}`
-    })
-    .join('\n')
+      }).join('\n')
+    : 'Let the script end naturally without an explicit CTA (\'none\' recommended).'
   
   // Build anti-patterns warning
   const antiPatternsSection = CTA_ANTI_PATTERNS

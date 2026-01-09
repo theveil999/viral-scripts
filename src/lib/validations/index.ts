@@ -46,19 +46,19 @@ export const getScriptsQuerySchema = z.object({
 // Hooks
 // ===================
 
-// PcmType from hook-generation.ts
-const pcmTypeSchema = z.enum(['harmonizer', 'thinker', 'rebel', 'persister', 'imaginer', 'promoter'])
+// PcmType from hook-generation.ts - exported for reuse
+export const pcmTypeSchema = z.enum(['harmonizer', 'thinker', 'rebel', 'persister', 'imaginer', 'promoter'])
 
 export const hookSchema = z.object({
-  hook: z.string().min(1, 'Hook text is required'),
-  hook_type: z.string().min(1, 'Hook type is required'),
+  hook: z.string().min(1),
+  hook_type: z.string().min(1),
   parasocial_levers: z.array(z.string()).default([]),
-  why_it_works: z.string().min(1, 'why_it_works is required'), // Bug fix: was optional but GeneratedHook requires it
+  why_it_works: z.string().min(1),
   pcm_type: pcmTypeSchema.optional(),
-  quality_score: z.number().optional(),
+  quality_score: z.number().min(0).max(100).optional(),
   selected: z.boolean().optional(),
   variation_strategy: z.string().optional(),
-  concept_id: z.string().optional(),
+  concept_id: uuidSchema.optional(),
 })
 
 export const expandScriptsSchema = z.object({
@@ -73,11 +73,25 @@ export const expandScriptsSchema = z.object({
 
 // Bug fix: Schema must match ExpandedScript interface requirements
 export const structureBreakdownSchema = z.object({
-  hook: z.string(),
-  tension: z.string(),
-  payload: z.string(),
-  closer: z.string(),
+  hook: z.string().min(1),
+  tension: z.string().min(1),
+  payload: z.string().min(1),
+  closer: z.string().min(1),
 })
+
+// CTA types for organic closers
+export const organicCtaTypeSchema = z.enum([
+  'fantasy_invitation',
+  'qualifier_challenge', 
+  'exclusivity_signal',
+  'direct_desire',
+  'loyalty_reward',
+  'consequence_lock',
+  'rhetorical_close',
+  'outcome_promise',
+  'emotional_bond',
+  'none',
+])
 
 export const expandedScriptSchema = z.object({
   hook_index: z.number().int().nonnegative(),
@@ -86,10 +100,11 @@ export const expandedScriptSchema = z.object({
   word_count: z.number().int().positive(),
   estimated_duration_seconds: z.number().positive(),
   structure_breakdown: structureBreakdownSchema,
-  parasocial_levers_used: z.array(z.string()),
-  voice_elements_used: z.array(z.string()),
-  quality_score: z.number().optional(),
+  parasocial_levers_used: z.array(z.string()).default([]),
+  voice_elements_used: z.array(z.string()).default([]),
+  quality_score: z.number().min(0).max(100).optional(),
   validation_issues: z.array(z.string()).optional(),
+  cta_type: organicCtaTypeSchema.optional(), // Optional CTA type for organic closers
 })
 
 export const transformScriptsSchema = z.object({
@@ -97,15 +112,16 @@ export const transformScriptsSchema = z.object({
 })
 
 // Bug fix: Schema must match TransformedScript interface requirements
+// Note: voice_fidelity_score is 0-100 range (services clamp to this range)
 export const transformedScriptSchema = z.object({
   script_index: z.number().int().nonnegative(),
   original_hook: z.string().min(1),
   transformed_script: z.string().min(1),
   word_count: z.number().int().positive(),
-  changes_made: z.array(z.string()),
-  voice_fidelity_score: z.number().min(0).max(1),
-  ai_tells_removed: z.array(z.string()),
-  voice_elements_added: z.array(z.string()),
+  changes_made: z.array(z.string()).default([]),
+  voice_fidelity_score: z.number().min(0).max(100),
+  ai_tells_removed: z.array(z.string()).default([]),
+  voice_elements_added: z.array(z.string()).default([]),
 })
 
 export const validateScriptsSchema = z.object({

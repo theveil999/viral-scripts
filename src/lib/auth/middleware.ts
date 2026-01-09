@@ -26,9 +26,12 @@ const DEV_USER: AuthUser = {
 
 /**
  * Check if auth should be skipped (for local development)
+ * Requires explicit opt-in via SKIP_AUTH=true environment variable
  */
 function shouldSkipAuth(): boolean {
-  return process.env.SKIP_AUTH === 'true' || process.env.NODE_ENV === 'development'
+  // Only skip auth when explicitly enabled - do NOT automatically skip in development
+  // to avoid accidental production deployment with auth disabled
+  return process.env.SKIP_AUTH === 'true'
 }
 
 /**
@@ -36,8 +39,9 @@ function shouldSkipAuth(): boolean {
  * Returns null if not authenticated
  */
 export async function getAuthUser(request: NextRequest): Promise<AuthResult> {
-  // Bypass auth for local development
+  // Bypass auth for local development when explicitly enabled
   if (shouldSkipAuth()) {
+    console.warn('[AUTH] Bypassing authentication - using mock DEV_USER (SKIP_AUTH=true)')
     return { user: DEV_USER, error: null }
   }
   try {

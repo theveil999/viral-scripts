@@ -49,7 +49,7 @@ async function fixDurationColumn() {
     console.log('\n⚠️  Cannot run SQL directly via API.')
     console.log('\n📋 Please run this SQL in your Supabase Dashboard SQL Editor:\n')
     console.log(`
--- Go to: https://supabase.com/dashboard/project/cnqaomffusspvhugrwpf/sql/new
+-- Go to: Supabase Dashboard > SQL Editor > New Query
 
 -- Run this SQL:
 DO $$
