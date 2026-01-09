@@ -1,0 +1,80 @@
+# CodeRabbit Configuration
+# https://docs.coderabbit.ai/guides/configure-coderabbit
+
+language: "en-US"
+
+reviews:
+  # Enable automatic reviews on PRs
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - main
+
+  # Review profile - thorough but not pedantic
+  profile: "chill"
+  
+  # Focus areas for this project
+  path_instructions:
+    - path: "src/lib/prompts/**"
+      instructions: |
+        These are LLM prompt templates. Review for:
+        - Clear, specific instructions
+        - Proper variable interpolation
+        - Edge case handling in prompts
+        - Consistency with voice/tone guidelines
+    
+    - path: "src/lib/services/**"
+      instructions: |
+        Core business logic services. Review for:
+        - Error handling and graceful degradation
+        - Type safety and null checks
+        - Performance with large datasets
+        - Proper async/await patterns
+    
+    - path: "src/app/api/**"
+      instructions: |
+        Next.js API routes. Review for:
+        - Input validation
+        - Proper HTTP status codes
+        - Error response consistency
+        - Authentication/authorization if applicable
+    
+    - path: "supabase/migrations/**"
+      instructions: |
+        Database migrations. Review for:
+        - Data integrity
+        - Backwards compatibility
+        - Index optimization
+        - Proper constraints
+
+  # Request changes vs suggestions
+  request_changes_workflow: false
+  
+  # High-level summary
+  high_level_summary: true
+  
+  # Poem in summary (fun touch)
+  poem: true
+
+chat:
+  # Enable chat in PR comments
+  auto_reply: true
+
+# Ignore patterns
+path_filters:
+  # Don't review auto-generated or config files
+  - "!**/*.lock"
+  - "!**/package-lock.json"
+  - "!**/*.min.js"
+  - "!**/node_modules/**"
+  - "!**/.next/**"
+  - "!**/dist/**"
+  - "!**/*.d.ts"
+  
+  # Include everything else
+  - "**/*"
+
+# Early access features
+early_access: true
+
