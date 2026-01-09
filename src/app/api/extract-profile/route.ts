@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { transcript, name } = validation.data
+    const { transcript, name, stage_name } = validation.data
 
     // Extract voice profile using Claude
     const voiceProfile = await extractVoiceProfile(transcript)
@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
       .from('models') as any)
       .insert({
         name,
+        stage_name: stage_name || null,
         transcript_raw: transcript,
         voice_profile: voiceProfile,
         archetype_tags: archetypeTags,
