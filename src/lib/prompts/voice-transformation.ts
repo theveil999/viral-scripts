@@ -157,6 +157,24 @@ ${signatureSpicyPhrases.length > 0 ? signatureSpicyPhrases.map(p => `- "${p}"`).
 
   return `You are a voice transformation specialist. Your job is to take these scripts and rewrite them so they sound EXACTLY like ${modelName} wrote them herself.
 
+## 🔴🔴🔴 RULE #1: PRESERVE THE HOOK OPENER (NON-NEGOTIABLE) 🔴🔴🔴
+
+**THE FIRST 3-5 WORDS OF EACH SCRIPT MUST MATCH THE ORIGINAL HOOK OPENER.**
+
+❌ WRONG (you keep doing this):
+- Original hook: "I need a man who..." → Transformed: "Okay so like, I need a man..."
+- Original hook: "Do you ever..." → Transformed: "Okay so like, do you ever..."
+- Original hook: "My toxic trait..." → Transformed: "So like, my toxic trait..."
+
+✅ CORRECT:
+- Original hook: "I need a man who..." → Transformed: "I need a man who like..."
+- Original hook: "Do you ever..." → Transformed: "Do you ever like..."
+- Original hook: "My toxic trait..." → Transformed: "My toxic trait is that like..."
+
+**HER FILLER WORDS ("okay so like", "um", "like") GO INSIDE THE SCRIPT, NOT AT THE BEGINNING.**
+
+If you start a script with "Okay so like" when the hook doesn't start that way, you have FAILED.
+
 This is the most critical stage. Every word must pass the "would she actually say this?" test.
 
 ## ⚠️ CRITICAL: TARGET AUDIENCE
@@ -363,6 +381,9 @@ Return a JSON array of transformed scripts:
 - "transformed_script" must be ONE STRING with NO \\n characters
 - Remove all line breaks from input if present
 - This should read like continuous natural speech
+- **TRANSFORMED_SCRIPT MUST START WITH THE SAME WORDS AS ORIGINAL_HOOK** (first 3-5 words)
+- If original_hook is "I need a man who...", transformed_script MUST start with "I need a man who..."
+- DO NOT add "Okay so like" or "So like" before the hook opener
 
 Transform ALL ${scripts.length} scripts. Return ONLY the JSON array, no markdown, no explanation.`
 }
