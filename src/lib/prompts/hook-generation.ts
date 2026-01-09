@@ -122,46 +122,68 @@ const PARASOCIAL_LEVER_DESCRIPTIONS: Record<string, string> = {
   protector_dynamic: 'Making viewer feel cared for or protected',
 }
 
-const HOOK_TYPE_FRAMEWORKS: Record<string, { description: string; pattern: string; example: string }> = {
+// CRITICAL: These frameworks MUST create viewer-qualifying hooks that make the viewer feel CHOSEN
+// NOT confessional storytelling about the creator's personal experiences
+const HOOK_TYPE_FRAMEWORKS: Record<string, { description: string; pattern: string; example: string; corpus_example: string }> = {
   bold_statement: {
-    description: 'Provocative claim that demands attention',
-    pattern: '[Unexpected claim] + [qualifier or twist]',
-    example: "I'm the worst girlfriend ever. And that's why he won't leave.",
+    description: 'Statement about what SHE wants/needs FROM the viewer or a type of man',
+    pattern: 'I [want/need/love] a man who [specific behavior]',
+    example: "I need a man who isn't afraid to devour me like his last meal",
+    corpus_example: "i need a man who can go back to back because i've always had this fantasy",
   },
   question: {
-    description: 'Rhetorical or direct question that creates curiosity gap',
-    pattern: 'Why do/does [specific group] always [behavior]?',
-    example: 'Why do men ghost right when things get good?',
+    description: 'Question that qualifies the viewer OR asks if they relate to something sexual',
+    pattern: 'Do you ever [sexual thought/behavior]? / Are you the type who [desirable trait]?',
+    example: 'Do you ever get so turned on by a voice note that you have to sit down?',
+    corpus_example: "ladies do you ever get like soaked just from a man's voice",
   },
   confession: {
-    description: 'Vulnerable admission that feels exclusive',
-    pattern: 'My [toxic trait/secret/confession] is [specific detail]',
-    example: 'My toxic trait is catching feelings after one good text.',
+    description: 'Confession about what TURNS HER ON about a type of man (not a personal story)',
+    pattern: 'My toxic trait is [how she reacts to a type of man]',
+    example: "My toxic trait is if you grab my chin and look in my eyes, I'm yours forever",
+    corpus_example: "My toxic trait is that I'll look you in the eyes, smile sweetly, and say you don't have to pull out",
   },
   challenge: {
-    description: 'Directly challenges viewer or calls them out',
-    pattern: "If you [behavior], you're [judgment]",
-    example: "If you don't double-text, you don't actually like them.",
+    description: 'Directly challenges viewer to be the type she wants',
+    pattern: "If you [do/don't do X]... [reward/judgment]",
+    example: "If you call me good girl without me asking? Marry me immediately.",
+    corpus_example: "If she carries one of these around with her everywhere she goes, she gives really good top, okay?",
   },
   relatable: {
-    description: 'Shared experience that triggers recognition',
-    pattern: 'POV: [specific scenario]',
-    example: "POV: You're convincing yourself he's just bad at texting",
+    description: 'Relatable SEXUAL thought that makes viewer think "she wants someone like me"',
+    pattern: 'When a man [does X], I immediately [sexual reaction]',
+    example: "When a man puts his hand on my lower back in public, I'm already thinking about what I'll do to him later",
+    corpus_example: "whenever i'm in a relationship i love sending videos of myself getting ready to my partner",
   },
   fantasy: {
-    description: 'Aspirational or desire-driven hook',
-    pattern: 'I just want [specific fantasy]',
-    example: 'I just want a man who [long specific list]',
+    description: 'Specific fantasy about what she wants a man to DO to her (viewer imagines being that man)',
+    pattern: 'I want a man who will [very specific sexual/romantic act]',
+    example: "I want a man who will grab my hair and whisper 'you're mine' while he's inside me",
+    corpus_example: "i want a man who's gonna walk around holding on the back of my neck like he owns me",
   },
   hot_take: {
-    description: 'Controversial opinion stated as fact',
-    pattern: '[Controversial statement]. I said what I said.',
-    example: "Body count doesn't matter. Emotional damage does.",
+    description: 'Controversial sexual opinion that qualifies men she wants',
+    pattern: 'Guys who [do X] are [positive/negative]... and I mean that',
+    example: "Guys who can cook? Immediate marriage material. I don't make the rules.",
+    corpus_example: "i fucking love when men talk during sex like, i wanna hear how good it feels for you",
   },
   storytime: {
-    description: 'Teases a story that demands completion',
-    pattern: 'So I [shocking action/situation]...',
-    example: 'So I accidentally sent that to my boss...',
+    description: 'Sexual storytime that makes viewer imagine being the man in the story',
+    pattern: 'So this guy [did something to me] and now I [reaction]',
+    example: "So he grabbed my chin and said 'look at me when I'm talking to you' and now I'm pregnant",
+    corpus_example: "one time my ex blindfolded me and got out some icy hot and he put it on my pink taco",
+  },
+  advice: {
+    description: 'Sexual tip/advice directed TO men about how to please her/women',
+    pattern: 'If you want to [drive her crazy/make her obsessed]... [specific action]',
+    example: "If you want to make me absolutely feral, call me a good girl when I least expect it",
+    corpus_example: "if i want to make a man fall in love with me i will worship his",
+  },
+  thirst_commentary: {
+    description: 'Commentary on something that turns her on (viewer can be that thing)',
+    pattern: 'There is nothing hotter than [specific type of man/behavior]',
+    example: "There is nothing hotter than a man who knows exactly where to put his hands without asking",
+    corpus_example: "there is nothing fucking hotter than when a man is hittin' it so good",
   },
 }
 
@@ -419,6 +441,10 @@ ${frameworksSection}
 
 ## 🚫 HOOKS THAT DON'T CONVERT (AVOID THESE)
 
+❌ PERSONAL STORYTIME HOOKS - These kill conversion!
+   BAD: "I drove to Sedona and..." / "This one time I..." / "Yesterday I went to..."
+   WHY BAD: Viewer can't insert themselves, they're just eavesdropping on her life
+   
 ❌ Self-focused hooks that brag about HER (makes viewer feel inadequate)
    BAD: "I performed at Carnegie Hall so your guitar skills don't impress me"
    
@@ -429,7 +455,11 @@ ${frameworksSection}
    BAD: "Ladies, do you ever feel like..." (unless her audience is women)
 
 ❌ Hooks about HER achievements without viewer involvement
-   BAD: "I'm talented at X" 
+   BAD: "I'm talented at X"
+
+❌ Travel/location-based hooks without viewer involvement
+   BAD: "When I was in Paris..." / "At this restaurant I went to..."
+   WHY BAD: Viewer can't be there, they're excluded from the fantasy 
 
 ## ✅ HOOKS THAT CONVERT (USE THESE PATTERNS)
 

@@ -349,13 +349,34 @@ Sentence count: ${duration.sentences} sentences
    - "Am I asking for too much here?"
    - "Is that so hard?"
 
-## 🚫 SCRIPTS THAT DON'T CONVERT (AVOID)
+## 🚫 SCRIPTS THAT DON'T CONVERT (AVOID THESE PATTERNS)
+
+❌ **PERSONAL STORYTIME** - This is the #1 killer
+   BAD: "So I went to Sedona and..." / "Yesterday I was at the mall..."
+   WHY: Viewer can't insert themselves, they're just eavesdropping
+   
+❌ **LOCATION/TRAVEL STORIES** without viewer involvement
+   BAD: "When I was in Paris..." / "I drove to the beach..."
+   WHY: Viewer isn't there, they're excluded from the fantasy
 
 ❌ Scripts about HER being impressive (makes viewer feel inadequate)
 ❌ Generic relationship advice that could be anyone
 ❌ Content that sounds like girlfriends talking to each other
 ❌ Scripts that focus on her talents/achievements without viewer involvement
 ❌ Vague, non-specific content with no vivid imagery
+
+## ✅ WHAT CONVERTS: VIEWER-QUALIFYING SCRIPTS
+
+The script should make the viewer feel like:
+- "She's talking about ME"
+- "I could be that guy she wants"
+- "She would want ME if she knew me"
+
+**Transform any hook into this structure:**
+1. [What she wants/needs in a man] - qualifies viewer
+2. [Specific behavior/trait she finds irresistible] - viewer imagines being that
+3. [What she would do / how she would react] - the fantasy/reward
+4. [Organic closer that creates attachment]
 
 ## BOUNDARIES (DO NOT INCLUDE)
 
