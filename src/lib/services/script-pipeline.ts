@@ -8,6 +8,50 @@ import { scoreShareability, type ShareabilityScore } from './shareability-scorin
 import type { TargetDuration, OrganicCtaType } from '../prompts/script-expansion'
 import type { PcmType } from '../prompts/hook-generation'
 
+// Custom Error Classes for better error handling
+export class PipelineError extends Error {
+  constructor(
+    message: string,
+    public readonly stage: PipelineStage,
+    public readonly cause?: Error
+  ) {
+    super(message)
+    this.name = 'PipelineError'
+  }
+}
+
+export class ModelNotFoundError extends PipelineError {
+  constructor(modelId: string) {
+    super(`Model not found: ${modelId}`, 'initialization')
+    this.name = 'ModelNotFoundError'
+  }
+}
+
+export class StageFailedError extends PipelineError {
+  constructor(stage: PipelineStage, cause: Error) {
+    super(`Stage '${stage}' failed: ${cause.message}`, stage, cause)
+    this.name = 'StageFailedError'
+  }
+}
+
+export type PipelineStage = 
+  | 'initialization'
+  | 'corpus_retrieval'
+  | 'hook_generation'
+  | 'shareability_scoring'
+  | 'script_expansion'
+  | 'voice_transformation'
+  | 'validation'
+  | 'save'
+
+// Pipeline event callbacks for progress tracking
+export interface PipelineCallbacks {
+  onStageStart?: (stage: PipelineStage) => void
+  onStageComplete?: (stage: PipelineStage, stats: Record<string, unknown>) => void
+  onStageError?: (stage: PipelineStage, error: Error) => void
+  onProgress?: (stage: PipelineStage, progress: number, total: number) => void
+}
+
 // Types
 export interface PipelineOptions {
   hookCount?: number
@@ -21,6 +65,10 @@ export interface PipelineOptions {
   enableShareabilityScoring?: boolean  // default: true
   ctaStyle?: OrganicCtaType | 'auto'  // organic CTA type preference
   enablePcmTracking?: boolean  // default: true - track PCM personality distribution
+  // Progress and error handling
+  callbacks?: PipelineCallbacks
+  retryFailedStages?: boolean  // default: false - retry stages that fail with transient errors
+  maxRetries?: number  // default: 2 - max retries per stage
 }
 
 export interface StageStats {
@@ -105,6 +153,35 @@ export interface PipelineResult {
 }
 
 /**
+ * Utility function for retrying async operations with exponential backoff
+ */
+async function withRetry<T>(
+  operation: () => Promise<T>,
+  stage: PipelineStage,
+  maxRetries: number = 2,
+  callbacks?: PipelineCallbacks
+): Promise<T> {
+  let lastError: Error | undefined
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation()
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error))
+      
+      if (attempt < maxRetries) {
+        const delay = Math.pow(2, attempt) * 1000 // Exponential backoff: 1s, 2s, 4s
+        console.warn(`Stage '${stage}' failed (attempt ${attempt + 1}/${maxRetries + 1}), retrying in ${delay}ms...`)
+        await new Promise(resolve => setTimeout(resolve, delay))
+      }
+    }
+  }
+  
+  callbacks?.onStageError?.(stage, lastError!)
+  throw new StageFailedError(stage, lastError!)
+}
+
+/**
  * Run the complete script generation pipeline
  */
 export async function runPipeline(
@@ -123,12 +200,38 @@ export async function runPipeline(
     enableShareabilityScoring = true,
     ctaStyle = 'auto',
     enablePcmTracking = true,
+    // Progress and error handling
+    callbacks,
+    retryFailedStages = false,
+    maxRetries = 2,
   } = options
 
   const pipelineStart = Date.now()
   const supabase = createAdminClient()
 
+  // Helper to execute stage with optional retry
+  const executeStage = async <T>(
+    stage: PipelineStage,
+    operation: () => Promise<T>
+  ): Promise<T> => {
+    callbacks?.onStageStart?.(stage)
+    
+    try {
+      const result = retryFailedStages 
+        ? await withRetry(operation, stage, maxRetries, callbacks)
+        : await operation()
+      return result
+    } catch (error) {
+      const pipelineError = error instanceof PipelineError 
+        ? error 
+        : new StageFailedError(stage, error instanceof Error ? error : new Error(String(error)))
+      callbacks?.onStageError?.(stage, pipelineError)
+      throw pipelineError
+    }
+  }
+
   // Fetch model info
+  callbacks?.onStageStart?.('initialization')
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: model, error: modelError } = await (supabase
     .from('models') as any)
@@ -137,7 +240,9 @@ export async function runPipeline(
     .single()
 
   if (modelError || !model) {
-    throw new Error(`Failed to fetch model ${modelId}: ${modelError?.message || 'Not found'}`)
+    const error = new ModelNotFoundError(modelId)
+    callbacks?.onStageError?.('initialization', error)
+    throw error
   }
 
   // Initialize stage stats
@@ -165,11 +270,14 @@ export async function runPipeline(
 
   if (model.embedding) {
     try {
-      const corpusResult = await retrieveRelevantCorpus(modelId, { limit: corpusLimit })
+      const corpusResult = await executeStage('corpus_retrieval', () => 
+        retrieveRelevantCorpus(modelId, { limit: corpusLimit })
+      )
       corpusMatches = corpusResult.matches.length
       avgSimilarity = corpusResult.retrieval_stats.avg_similarity
     } catch (err) {
-      console.warn('Corpus retrieval failed:', err)
+      // Corpus retrieval is non-critical, log and continue
+      console.warn('Corpus retrieval failed (non-critical):', err)
     }
   }
 
@@ -178,6 +286,7 @@ export async function runPipeline(
     avg_similarity: avgSimilarity,
     time_ms: Date.now() - corpusStart,
   }
+  callbacks?.onStageComplete?.('corpus_retrieval', stages.corpus_retrieval)
 
   // ===================
   // STAGE 2: Hook Generation (with variations + PCM tracking)
@@ -185,12 +294,14 @@ export async function runPipeline(
   console.log('Stage 2: Hook Generation...')
   const hookStart = Date.now()
 
-  const hookResult = await generateHooks(modelId, {
-    count: hookCount,
-    temperature: 0.9,
-    variationsPerConcept,
-    enablePcmTracking,
-  })
+  const hookResult = await executeStage('hook_generation', () =>
+    generateHooks(modelId, {
+      count: hookCount,
+      temperature: 0.9,
+      variationsPerConcept,
+      enablePcmTracking,
+    })
+  )
 
   stages.hook_generation = {
     generated: hookResult.hooks.length,
@@ -200,6 +311,8 @@ export async function runPipeline(
     tokens_used: hookResult.generation_stats.tokens_used,
   }
   totalTokens += hookResult.generation_stats.tokens_used
+  callbacks?.onStageComplete?.('hook_generation', stages.hook_generation)
+  callbacks?.onProgress?.('hook_generation', hookResult.hooks.length, hookCount)
 
   // Store variation sets for result
   const variationSets = hookResult.variation_sets
