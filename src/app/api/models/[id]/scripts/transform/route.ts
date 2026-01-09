@@ -32,8 +32,8 @@ export async function POST(
       )
     }
 
-    // Cast scripts to match service type (validation ensures required fields)
-    const result = await transformVoice(id, validation.data.scripts as ExpandedScript[])
+    // Schema now properly validates all ExpandedScript fields
+    const result = await transformVoice(id, validation.data.scripts)
 
     return NextResponse.json({
       transformed_scripts: result.transformed_scripts,

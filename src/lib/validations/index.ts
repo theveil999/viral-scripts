@@ -45,12 +45,19 @@ export const getScriptsQuerySchema = z.object({
 // Hooks
 // ===================
 
+// PcmType from hook-generation.ts
+const pcmTypeSchema = z.enum(['harmonizer', 'thinker', 'rebel', 'persister', 'imaginer', 'promoter'])
+
 export const hookSchema = z.object({
   hook: z.string().min(1, 'Hook text is required'),
   hook_type: z.string().min(1, 'Hook type is required'),
   parasocial_levers: z.array(z.string()).default([]),
-  why_it_works: z.string().optional(),
-  pcm_type: z.string().optional(),
+  why_it_works: z.string().min(1, 'why_it_works is required'), // Bug fix: was optional but GeneratedHook requires it
+  pcm_type: pcmTypeSchema.optional(),
+  quality_score: z.number().optional(),
+  selected: z.boolean().optional(),
+  variation_strategy: z.string().optional(),
+  concept_id: z.string().optional(),
 })
 
 export const expandScriptsSchema = z.object({
@@ -60,19 +67,32 @@ export const expandScriptsSchema = z.object({
 })
 
 // ===================
-// Voice Transformation
+// Voice Transformation (input is ExpandedScript[])
 // ===================
 
-export const transformedScriptSchema = z.object({
+// Bug fix: Schema must match ExpandedScript interface requirements
+export const structureBreakdownSchema = z.object({
   hook: z.string(),
-  script: z.string(),
+  tension: z.string(),
+  payload: z.string(),
+  closer: z.string(),
+})
+
+export const expandedScriptSchema = z.object({
+  hook_index: z.number().int().nonnegative(),
+  hook: z.string().min(1),
+  script: z.string().min(1),
   word_count: z.number().int().positive(),
-  hook_type: z.string().optional(),
-  target_duration: z.string().optional(),
+  estimated_duration_seconds: z.number().positive(),
+  structure_breakdown: structureBreakdownSchema,
+  parasocial_levers_used: z.array(z.string()),
+  voice_elements_used: z.array(z.string()),
+  quality_score: z.number().optional(),
+  validation_issues: z.array(z.string()).optional(),
 })
 
 export const transformScriptsSchema = z.object({
-  scripts: z.array(transformedScriptSchema).min(1, 'At least one script is required'),
+  scripts: z.array(expandedScriptSchema).min(1, 'At least one script is required'),
 })
 
 export const validateScriptsSchema = z.object({

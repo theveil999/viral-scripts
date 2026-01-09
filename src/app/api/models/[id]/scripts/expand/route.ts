@@ -34,7 +34,7 @@ export async function POST(
 
     const { hooks, targetDuration, corpusLimit } = validation.data
 
-    // Cast hooks to match service type (validation ensures required fields)
+    // Schema validates all required GeneratedHook fields with correct types
     const result = await expandScripts(id, hooks as GeneratedHook[], {
       targetDuration,
       corpusLimit,
