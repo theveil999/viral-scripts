@@ -311,11 +311,11 @@ export async function runPipeline(
 
   const hookResult = await executeStage('hook_generation', () =>
     generateHooks(modelId, {
-      count: hookCount,
-      temperature: 0.9,
-      variationsPerConcept,
-      enablePcmTracking,
-    })
+    count: hookCount,
+    temperature: 0.9,
+    variationsPerConcept,
+    enablePcmTracking,
+  })
   )
 
   stages.hook_generation = {
@@ -378,13 +378,13 @@ export async function runPipeline(
   // ===================
   console.log('Stage 3: Script Expansion...')
   const expandStart = Date.now()
-  
+
   const expansionResult = await executeStage('script_expansion', () =>
     expandScripts(modelId, hookResult.hooks, {
-      targetDuration,
-      corpusLimit,
-      ctaType: ctaStyle,
-    })
+    targetDuration,
+    corpusLimit,
+    ctaType: ctaStyle,
+  })
   )
 
   stages.script_expansion = {
@@ -405,9 +405,9 @@ export async function runPipeline(
 
   const transformResult = await executeStage('voice_transformation', () =>
     transformVoice(modelId, expansionResult.scripts, {
-      batchSize: 5,
-      temperature: 0.7,
-    })
+    batchSize: 5,
+    temperature: 0.7,
+  })
   )
 
   stages.voice_transformation = {
