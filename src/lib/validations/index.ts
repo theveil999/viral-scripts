@@ -27,7 +27,8 @@ export const createModelSchema = z.object({
 // Scripts
 // ===================
 
-export const scriptStatusSchema = z.enum(['draft', 'approved', 'rejected', 'archived'])
+// Status values must match database and UI: draft, approved, posted, archived
+export const scriptStatusSchema = z.enum(['draft', 'approved', 'posted', 'archived'])
 
 export const updateScriptsStatusSchema = z.object({
   script_ids: z.array(uuidSchema).min(1, 'At least one script ID is required'),

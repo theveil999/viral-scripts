@@ -4,125 +4,21 @@
 import type { VoiceProfile } from '../supabase/types'
 import type { CorpusMatch } from '../services/corpus-retrieval'
 import type { GeneratedHook } from '../services/hook-generation'
+import {
+  type OrganicCTAType,
+  ORGANIC_CTA_TEMPLATES,
+  CTA_ANTI_PATTERNS,
+  buildCTAGuidance,
+  getRecommendedCTAs,
+} from './organic-cta'
+
+// Re-export OrganicCtaType with the naming convention used in this file
+export type OrganicCtaType = OrganicCTAType
 
 export type TargetDuration = 'short' | 'medium' | 'long'
 
-// Organic CTA types - non-salesy closers that build cult following
-export type OrganicCtaType = 
-  | 'fantasy_invitation'   // "If you're [qualifier]... [desire]"
-  | 'keeper_signal'        // "That's [high value label]"
-  | 'consequence_lock'     // "you fucked up, okay? Because now..."
-  | 'rhetorical_close'     // "Am I asking for too much?"
-  | 'outcome_promise'      // "I'm telling you, [result]"
-  | 'qualifier_challenge'  // "If you're not [doing X]..."
-  | 'emotional_bond'       // Simple connection: "now follow me i miss you"
-  | 'none'                 // Let script end naturally
-
-// Corpus-derived CTA patterns that feel natural, NOT promotional
-const ORGANIC_CTA_PATTERNS: Record<OrganicCtaType, {
-  description: string
-  pattern: string
-  corpus_examples: string[]
-  anti_patterns: string[] // What to AVOID
-}> = {
-  fantasy_invitation: {
-    description: 'Makes viewer feel chosen/selected by qualifying them',
-    pattern: 'If you\'re [specific type]... [I need you / I\'ve been searching / hit me up]',
-    corpus_examples: [
-      'if you find one, don\'t let him go',
-      'if you\'re that type of guy... hit me up',
-      'if you drive one of these... I need you',
-    ],
-    anti_patterns: ['follow for more', 'link in bio', 'check out my'],
-  },
-  keeper_signal: {
-    description: 'Labels the ideal viewer as high-value marriage material',
-    pattern: 'That\'s [marriage material / a keeper / wifey material]',
-    corpus_examples: [
-      'That\'s marriage material right there.',
-      'That\'s a keeper.',
-      'Marry that man.',
-    ],
-    anti_patterns: ['subscribe to', 'see more on'],
-  },
-  consequence_lock: {
-    description: 'Playful possessiveness - "now you\'re stuck with me"',
-    pattern: 'you fucked up, okay? Because now [possessive consequence]',
-    corpus_examples: [
-      'Cause now I\'m never letting you go.',
-      'Till death do us part, motherfucker.',
-      'You\'re not going anywhere.',
-    ],
-    anti_patterns: ['don\'t forget to'],
-  },
-  rhetorical_close: {
-    description: 'Ends with question that validates the content',
-    pattern: 'Am I asking for too much? / Is that so hard?',
-    corpus_examples: [
-      'Am I asking for too much here?',
-      'Is that so hard?',
-      'I feel like I\'m not asking for much.',
-    ],
-    anti_patterns: ['let me know in comments'],
-  },
-  outcome_promise: {
-    description: 'Promises the result if viewer does what she described',
-    pattern: 'I\'m telling you, [result] / I promise you, [outcome]',
-    corpus_examples: [
-      'I\'m telling you, it drives them fucking crazy.',
-      'I promise you, that man will never feel so appreciated.',
-      'Trust me, he\'s not lasting.',
-    ],
-    anti_patterns: ['click the link'],
-  },
-  qualifier_challenge: {
-    description: 'Challenges viewer to step up or miss out',
-    pattern: 'If you\'re not [doing X]... you\'re holding yourself back',
-    corpus_examples: [
-      'you\'re holding yourself back from your true potential.',
-      'you\'re not doing it right.',
-      'you don\'t actually like them.',
-    ],
-    anti_patterns: ['swipe up'],
-  },
-  emotional_bond: {
-    description: 'Simple, direct emotional connection',
-    pattern: 'now follow me i miss you / I need that in my life',
-    corpus_examples: [
-      'now follow me i miss you',
-      'I need that.',
-      'That\'s all I want.',
-    ],
-    anti_patterns: ['make sure to follow'],
-  },
-  none: {
-    description: 'Let the script end naturally without explicit CTA',
-    pattern: 'End on punchline or natural conclusion',
-    corpus_examples: [
-      'It\'s the only way to do it.',
-      'That\'s how I like it.',
-      'I don\'t make the rules.',
-    ],
-    anti_patterns: ['all promotional language'],
-  },
-}
-
-// ANTI-PATTERNS: CTAs that sound salesy and should NEVER be used
-const CTA_ANTI_PATTERNS = [
-  'Link in bio',
-  'Follow for more',
-  'Subscribe to my',
-  'Check out my',
-  'Click the link',
-  'Swipe up',
-  'See more on',
-  'Don\'t forget to follow',
-  'Make sure to like',
-  'Comment below',
-  'Let me know in the comments',
-  'Share this with',
-  'Tag a friend',
-]
+// Re-export CTA constants for backward compatibility
+const ORGANIC_CTA_PATTERNS = ORGANIC_CTA_TEMPLATES
 
 export interface ScriptExpansionParams {
   modelName: string
