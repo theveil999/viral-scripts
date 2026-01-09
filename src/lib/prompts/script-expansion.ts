@@ -300,20 +300,46 @@ Sentence count: ${duration.sentences} sentences
    - Exclusivity: Make viewer feel like they're getting insider access
    - Vulnerability: Share real feelings, not performed ones
 
-5. BE SPECIFIC, NOT GENERIC
-   - BAD: "when a guy does something hot"
-   - GOOD: "when he grabs my chin and makes me look at him"
-   - Specific imagery = viral, generic statements = forgettable
+5. BE SPECIFIC WITH VIVID CORPUS-STYLE IMAGERY
+   
+   ❌ GENERIC (kills virality):
+   - "when a guy does something hot"
+   - "getting railed" / "going at it"
+   - "making love" / "being intimate"
+   
+   ✅ SPECIFIC (what goes viral - from corpus):
+   - "drool all over it, letting it trail from tongue to your..."
+   - "wear my pink taco like a glove"
+   - "slap my cheeks so hard it echoes into the hallway"
+   - "grab my hair and use my mouth like I'm his personal doll"
+   - "make me waterfall all over his face"
+   - "bounce on it like a pogo stick until his toes curl"
+   
+   Study how corpus examples describe:
+   - Specific body sensations (textures, temperatures, pressure)
+   - Visual details (what it looks like, positions)
+   - Sounds (moans, wet sounds, slapping)
+   - Physical reactions (trembling, gripping, arching)
 
 6. EXPLICITNESS MATCH: ${explicitnessLevel}
    ${explicitnessLevel === 'full_send' ? `
-   🔥 FULL SEND MODE - Be explicit and bold:
-   - Use her sexual vocabulary directly (from her spicy.sexual_vocabulary)
-   - Reference specific sex acts, positions, scenarios
-   - Don't censor words - if she says "fuck", write "fuck"
-   - Include vivid physical descriptions
-   - The corpus shows explicit scripts perform BEST for OF conversion
-   - Make viewers FEEL the fantasy, not just understand it
+   🔥 FULL SEND MODE - Match corpus explicitness:
+   
+   WHAT THE CORPUS DOES (100k+ views):
+   - Names specific body parts with euphemisms ("pink taco", "back door", "the boys")
+   - Describes specific sex acts in detail ("butter churning", "DJ scratching", "back shots")
+   - Uses vivid sensory language ("sopping", "throbbing", "dripping", "glistening")
+   - Includes physical reactions ("shaking", "trembling", "toes curling", "eyes rolling back")
+   - References positions and scenarios explicitly
+   
+   EXAMPLES FROM CORPUS:
+   - "i want you to wear my pink taco like a glove"
+   - "let me bounce on it until you're shooting blanks"
+   - "grab my hair and pull me back while you're hitting it from behind and say 'beg for it'"
+   - "when he comes up from eating and his face is glistening with my snail trail"
+   
+   YOUR SCRIPTS MUST have this level of vivid, specific sexual imagery.
+   No vague "getting intimate" - be as explicit as the corpus.
    ` : explicitnessLevel === 'medium' ? `
    ⚡ MEDIUM MODE - Suggestive and teasing:
    - Use innuendo and euphemisms  

@@ -287,14 +287,28 @@ export async function generateHooks(
   const distribution = getHookTypeDistribution(count, voiceProfile, hookTypes)
   const typesToGenerate = Object.keys(distribution)
 
-  // Step 4: Build prompt
+  // Step 4: Fetch recent hooks to avoid duplicates
+  const recentHooks = await getRecentHooks(modelId, 200)
+  
+  // Also fetch recent scripts to avoid hook repetition  
+  const { data: recentScripts } = await (supabase
+    .from('scripts') as ReturnType<typeof supabase.from>)
+    .select('hook')
+    .eq('model_id', modelId)
+    .order('created_at', { ascending: false })
+    .limit(100)
+  
+  const recentScriptHooks = recentScripts?.map((s: { hook: string }) => s.hook).filter(Boolean) || []
+  const allRecentHooks = [...new Set([...recentHooks, ...recentScriptHooks])]
+  
+  // Step 5: Build prompt
   const prompt = buildHookGenerationPrompt({
     modelName: model.name,
     voiceProfile,
     corpusExamples,
     hookTypes: typesToGenerate,
     count,
-    recentHooks: [], // TODO: fetch from hooks table
+    recentHooks: allRecentHooks,
     variationsPerConcept,
     enablePcmTracking,
   })
@@ -386,4 +400,55 @@ export async function getRecentHooks(modelId: string, limit = 100): Promise<stri
     .limit(limit)
 
   return hooks?.map((h: { content: string }) => h.content) || []
+}
+
+/**
+ * Save generated hooks to database for future deduplication tracking
+ */
+export async function saveGeneratedHooks(
+  modelId: string, 
+  hooks: GeneratedHook[]
+): Promise<void> {
+  const supabase = createAdminClient()
+  
+  const hooksToInsert = hooks.map(hook => ({
+    content: hook.hook,
+    hook_type: hook.hook_type,
+    model_id: modelId,
+    source: 'generated',
+    pcm_type: hook.pcm_type || null,
+    variation_strategy: hook.variation_strategy || null,
+    times_used: 0,
+  }))
+  
+  // Insert hooks (ignore duplicates based on content + model_id)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase
+    .from('hooks') as any)
+    .upsert(hooksToInsert, { 
+      onConflict: 'content,model_id',
+      ignoreDuplicates: true 
+    })
+  
+  if (error) {
+    console.warn('Failed to save hooks for tracking:', error.message)
+    // Non-fatal - continue even if hook tracking fails
+  }
+}
+
+/**
+ * Mark a hook as used (increment usage counter)
+ */
+export async function markHookUsed(hookContent: string, modelId: string): Promise<void> {
+  const supabase = createAdminClient()
+  
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase
+    .from('hooks') as any)
+    .update({ 
+      times_used: supabase.rpc('increment', { x: 1 }),
+      last_used_at: new Date().toISOString()
+    })
+    .eq('content', hookContent)
+    .eq('model_id', modelId)
 }

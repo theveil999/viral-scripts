@@ -430,14 +430,50 @@ ${frameworksSection}
 
 1. Each hook must be 5-12 words (shorter = better, viral hooks are PUNCHY)
 2. First 3 words are CRITICAL - they determine if someone stops scrolling
-3. Use ${modelName}'s EXACT vocabulary - her euphemisms, her terms, her phrases
-4. Include her catchphrases or sentence starters where natural
-5. Match her explicitness level: ${explicitnessLevel}
-6. Activate 2-3 parasocial strengths per hook (top performers combine multiple levers)
-7. NO generic hooks - must feel like ONLY she would say it
-8. Be SPECIFIC - "soaked from his voice" not "turned on by him"
-9. Vary the structure - don't repeat the same pattern
-10. NO hashtags, NO emojis, NO stage directions
+3. Use ${modelName}'s VOCABULARY (euphemisms, terms) BUT not her filler words in hooks
+4. Match her explicitness level: ${explicitnessLevel}
+5. Activate 2-3 parasocial strengths per hook (top performers combine multiple levers)
+6. NO generic hooks - must feel like ONLY she would say it
+7. Be SPECIFIC - "soaked from his voice" not "turned on by him"
+8. NO hashtags, NO emojis, NO stage directions
+
+## ⚠️ CRITICAL: OPENER DIVERSITY (MANDATORY)
+
+You MUST use DIFFERENT openers. DO NOT start more than 1 hook with the same words.
+
+REQUIRED OPENER DISTRIBUTION (use these EXACT patterns):
+- 2-3 hooks: "I want a man who..." / "I need a man who..."
+- 2-3 hooks: "If you [do X]..." / "If he [does X]..."  
+- 2-3 hooks: "There is nothing hotter than..." / "Nothing makes me..."
+- 2-3 hooks: "Do you ever..." / "Have you ever..."
+- 2-3 hooks: "My toxic trait is..." / "My problem is..."
+- 2-3 hooks: "When a man [does X]..." / "When he [does X]..."
+- 2-3 hooks: "Ladies..." / "Guys who..."
+- 2-3 hooks: Direct statements ("Veiny forearms..." / "A man who cooks...")
+
+❌ BANNED OPENERS (DO NOT USE MORE THAN ONCE TOTAL):
+- "Okay so like..." 
+- "So like..."
+- "Um..."
+- "Like..."
+
+Her filler words (${fillerWords}) go in the SCRIPT BODY, not in HOOKS. Hooks must be punchy and varied.
+
+## ⚠️ CRITICAL: TOPIC DIVERSITY (MANDATORY)
+
+DO NOT make all hooks about the same topic. You have ${count} hooks - use ${Math.ceil(count / 3)} DIFFERENT topics minimum.
+
+TOPIC VARIETY REQUIREMENT:
+- 3-4 hooks: Body parts / physical attraction (forearms, hands, voice, etc.)
+- 3-4 hooks: Bedroom activities / sex acts
+- 3-4 hooks: Relationship dynamics / possessiveness
+- 3-4 hooks: Turn-ons / what makes her want someone
+- 3-4 hooks: Qualifying men / what she's looking for
+- 2-3 hooks: Random unique topics (gaming, gym, food, etc.)
+
+${brandAnchors.length > 0 ? `Brand anchors (${brandAnchors.join(', ')}): Use in MAX 2 hooks, not every hook!` : ''}
+
+DO NOT fixate on any single topic. If you mention Sedona, hiking, or any specific thing - MAX 1 hook about it.
 
 ## 🚫 HOOKS THAT DON'T CONVERT (AVOID THESE)
 

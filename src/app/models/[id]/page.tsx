@@ -499,7 +499,7 @@ export default function ModelDetailPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="relative w-full max-w-md mx-4 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl"
+            className="relative w-full max-w-2xl mx-4 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl max-h-[90vh] flex flex-col"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-zinc-800">
@@ -569,10 +569,13 @@ export default function ModelDetailPage() {
                       disabled={isGenerating}
                       className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 disabled:opacity-50"
                     >
-                      <option value={1}>1 script</option>
-                      <option value={2}>2 scripts</option>
-                      <option value={3}>3 scripts</option>
+                      <option value={3}>3 scripts (quick test)</option>
                       <option value={5}>5 scripts</option>
+                      <option value={10}>10 scripts</option>
+                      <option value={15}>15 scripts</option>
+                      <option value={20}>20 scripts</option>
+                      <option value={25}>25 scripts (batch filming)</option>
+                      <option value={30}>30 scripts (max)</option>
                     </select>
                   </div>
 
@@ -615,31 +618,46 @@ export default function ModelDetailPage() {
                   
                   {/* Show scripts inline if not saved to DB */}
                   {!generateResult.savedToDb && generateResult.scripts && generateResult.scripts.length > 0 && (
-                    <div className="mt-4 space-y-3 max-h-64 overflow-y-auto">
-                      <p className="text-xs text-zinc-500 text-center mb-2">
-                        ⚠️ Scripts not saved - copy them now!
-                      </p>
-                      {generateResult.scripts.map((script, i) => (
-                        <div key={i} className="p-3 bg-zinc-800/50 rounded-lg border border-zinc-700">
-                          <div className="flex justify-between items-start mb-2">
-                            <span className="text-xs text-purple-400 font-medium">
-                              {script.hookType || 'Script'} #{i + 1}
-                            </span>
-                            <span className="text-xs text-zinc-500">
-                              {Math.round((script.voiceFidelityScore || 0) * 100)}% fidelity
-                            </span>
+                    <div className="mt-4">
+                      <div className="flex justify-between items-center mb-3">
+                        <p className="text-xs text-amber-500">
+                          ⚠️ Scripts not saved - copy them now!
+                        </p>
+                        <button
+                          onClick={() => {
+                            const allScripts = generateResult.scripts?.map((s, i) => 
+                              `=== SCRIPT ${i + 1} (${s.hookType}) ===\n${s.content}`
+                            ).join('\n\n');
+                            navigator.clipboard.writeText(allScripts || '');
+                          }}
+                          className="text-xs text-purple-400 hover:text-purple-300 transition-colors"
+                        >
+                          📋 Copy All Scripts
+                        </button>
+                      </div>
+                      <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-2">
+                        {generateResult.scripts.map((script, i) => (
+                          <div key={i} className="p-3 bg-zinc-800/50 rounded-lg border border-zinc-700">
+                            <div className="flex justify-between items-start mb-2">
+                              <span className="text-xs text-purple-400 font-medium">
+                                {script.hookType || 'Script'} #{i + 1}
+                              </span>
+                              <span className="text-xs text-zinc-500">
+                                {Math.round((script.voiceFidelityScore || 0) * 100)}% fidelity
+                              </span>
+                            </div>
+                            <p className="text-sm text-zinc-300 whitespace-pre-wrap">
+                              {script.content}
+                            </p>
+                            <button
+                              onClick={() => navigator.clipboard.writeText(script.content)}
+                              className="mt-2 text-xs text-zinc-500 hover:text-purple-400 transition-colors"
+                            >
+                              📋 Copy
+                            </button>
                           </div>
-                          <p className="text-sm text-zinc-300 whitespace-pre-wrap">
-                            {script.content}
-                          </p>
-                          <button
-                            onClick={() => navigator.clipboard.writeText(script.content)}
-                            className="mt-2 text-xs text-zinc-500 hover:text-purple-400 transition-colors"
-                          >
-                            📋 Copy
-                          </button>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   )}
                   

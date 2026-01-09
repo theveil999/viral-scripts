@@ -4,7 +4,7 @@
  */
 import { createAdminClient } from '../supabase/admin'
 import { retrieveRelevantCorpus } from './corpus-retrieval'
-import { generateHooks, type GeneratedHook, type HookVariationSet } from './hook-generation'
+import { generateHooks, saveGeneratedHooks, type GeneratedHook, type HookVariationSet } from './hook-generation'
 import { expandScripts, type ExpandedScript } from './script-expansion'
 import { transformVoice, type TransformedScript } from './voice-transformation'
 import { validateScripts, getPassingScripts, getScriptsNeedingRevision } from './script-validation'
@@ -328,6 +328,11 @@ export async function runPipeline(
   totalTokens += hookResult.generation_stats.tokens_used
   callbacks?.onStageComplete?.('hook_generation', stages.hook_generation)
   callbacks?.onProgress?.('hook_generation', hookResult.hooks.length, hookCount)
+
+  // Save hooks for future deduplication tracking (non-blocking)
+  saveGeneratedHooks(modelId, hookResult.hooks).catch(err => {
+    console.warn('Failed to save hooks for tracking:', err)
+  })
 
   // Store variation sets for result
   const variationSets = hookResult.variation_sets
