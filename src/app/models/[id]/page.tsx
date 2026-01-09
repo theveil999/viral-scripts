@@ -61,6 +61,13 @@ export default function ModelDetailPage() {
       passedValidation: number;
       avgVoiceFidelity: number;
     };
+    scripts?: Array<{
+      content: string;
+      hook: string;
+      hookType: string;
+      voiceFidelityScore: number;
+    }>;
+    savedToDb?: boolean;
   } | null>(null);
 
   const handleGenerateScripts = async () => {
@@ -93,6 +100,8 @@ export default function ModelDetailPage() {
         setGenerateResult({
           success: true,
           stats: data.stats,
+          scripts: data.scripts,
+          savedToDb: data.savedToDb,
         });
       }
     } catch (err) {
@@ -584,30 +593,68 @@ export default function ModelDetailPage() {
                 </>
               ) : generateResult.success ? (
                 /* Success State */
-                <div className="text-center py-4">
-                  <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
-                    <CheckCircle2 className="w-6 h-6 text-emerald-400" />
+                <div className="py-4">
+                  <div className="text-center mb-4">
+                    <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
+                      <CheckCircle2 className="w-6 h-6 text-emerald-400" />
+                    </div>
+                    <h3 className="text-lg font-medium text-zinc-100 mb-2">
+                      Scripts Generated!
+                    </h3>
+                    <div className="space-y-1 text-sm text-zinc-400 mb-4">
+                      <p>Total: {generateResult.stats?.totalGenerated || generateResult.scripts?.length || 0} scripts</p>
+                      <p>Passed validation: {generateResult.stats?.passedValidation || generateResult.scripts?.length || 0}</p>
+                      <p>
+                        Avg voice fidelity:{" "}
+                        <span className={generateResult.stats?.avgVoiceFidelity && generateResult.stats.avgVoiceFidelity >= 0.8 ? "text-emerald-400" : "text-yellow-400"}>
+                          {Math.round((generateResult.stats?.avgVoiceFidelity || 0) * 100)}%
+                        </span>
+                      </p>
+                    </div>
                   </div>
-                  <h3 className="text-lg font-medium text-zinc-100 mb-2">
-                    Scripts Generated!
-                  </h3>
-                  <div className="space-y-1 text-sm text-zinc-400 mb-4">
-                    <p>Total: {generateResult.stats?.totalGenerated} scripts</p>
-                    <p>Passed validation: {generateResult.stats?.passedValidation}</p>
-                    <p>
-                      Avg voice fidelity:{" "}
-                      <span className={generateResult.stats?.avgVoiceFidelity && generateResult.stats.avgVoiceFidelity >= 0.8 ? "text-emerald-400" : "text-yellow-400"}>
-                        {Math.round((generateResult.stats?.avgVoiceFidelity || 0) * 100)}%
-                      </span>
-                    </p>
-                  </div>
-                  <Link
-                    href="/scripts"
-                    className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 text-sm"
-                  >
-                    View Scripts
-                    <ExternalLink className="w-4 h-4" />
-                  </Link>
+                  
+                  {/* Show scripts inline if not saved to DB */}
+                  {!generateResult.savedToDb && generateResult.scripts && generateResult.scripts.length > 0 && (
+                    <div className="mt-4 space-y-3 max-h-64 overflow-y-auto">
+                      <p className="text-xs text-zinc-500 text-center mb-2">
+                        ⚠️ Scripts not saved - copy them now!
+                      </p>
+                      {generateResult.scripts.map((script, i) => (
+                        <div key={i} className="p-3 bg-zinc-800/50 rounded-lg border border-zinc-700">
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="text-xs text-purple-400 font-medium">
+                              {script.hookType || 'Script'} #{i + 1}
+                            </span>
+                            <span className="text-xs text-zinc-500">
+                              {Math.round((script.voiceFidelityScore || 0) * 100)}% fidelity
+                            </span>
+                          </div>
+                          <p className="text-sm text-zinc-300 whitespace-pre-wrap">
+                            {script.content}
+                          </p>
+                          <button
+                            onClick={() => navigator.clipboard.writeText(script.content)}
+                            className="mt-2 text-xs text-zinc-500 hover:text-purple-400 transition-colors"
+                          >
+                            📋 Copy
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Link to scripts page if saved */}
+                  {generateResult.savedToDb && (
+                    <div className="text-center">
+                      <Link
+                        href="/scripts"
+                        className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 text-sm"
+                      >
+                        View Scripts
+                        <ExternalLink className="w-4 h-4" />
+                      </Link>
+                    </div>
+                  )}
                 </div>
               ) : (
                 /* Error State */
