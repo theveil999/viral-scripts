@@ -19,7 +19,9 @@ import {
   Loader2,
   CheckCircle2,
   ExternalLink,
+  Trash2,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Model } from "@/lib/supabase/types";
 import {
@@ -35,10 +37,12 @@ import {
 
 export default function ModelDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const id = params.id as string;
   const [model, setModel] = useState<Model | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Generate scripts modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -106,6 +110,29 @@ export default function ModelDetailPage() {
       setIsModalOpen(false);
       setGenerateResult(null);
       setFormData({ topic: "", hookType: "", count: 3, saveToDb: true });
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!model) return;
+    const displayName = model.stage_name || model.name;
+    
+    if (!confirm(`Delete "${displayName}"? This will also delete all their scripts and cannot be undone.`)) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/models/${model.id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to delete');
+      }
+      // Redirect back to creators list
+      router.push('/models');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to delete creator');
+      setIsDeleting(false);
     }
   };
 
@@ -194,10 +221,24 @@ export default function ModelDetailPage() {
               )}
             </div>
           </div>
-          <Button variant="primary" onClick={() => setIsModalOpen(true)}>
-            <Sparkles className="w-4 h-4" />
-            Generate Scripts
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="primary" onClick={() => setIsModalOpen(true)}>
+              <Sparkles className="w-4 h-4" />
+              Generate Scripts
+            </Button>
+            <Button 
+              variant="danger" 
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Trash2 className="w-4 h-4" />
+              )}
+              Delete
+            </Button>
+          </div>
         </div>
 
         {/* Quick Stats Bar */}
