@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
         hook_type: script.hookType,
         script_archetype: script.scriptArchetype,
         parasocial_levers: script.parasocialLevers,
-        duration_estimate: script.durationEstimate,
+        duration_seconds: script.durationEstimate,
         word_count: script.wordCount,
         voice_fidelity_score: script.voiceFidelityScore,
         validation_passed: script.validationPassed,

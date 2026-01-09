@@ -1,6 +1,8 @@
 /**
  * @file Authentication middleware for API routes
  * Uses Supabase Auth to verify requests
+ * 
+ * For local/development use, set SKIP_AUTH=true to bypass authentication
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
@@ -16,11 +18,32 @@ export interface AuthResult {
   error: string | null
 }
 
+// Development/local bypass - returns a mock user
+const DEV_USER: AuthUser = {
+  id: 'local-dev-user',
+  email: 'dev@localhost',
+}
+
+/**
+ * Check if auth should be skipped (for local development)
+ * Requires explicit opt-in via SKIP_AUTH=true environment variable
+ */
+function shouldSkipAuth(): boolean {
+  // Only skip auth when explicitly enabled - do NOT automatically skip in development
+  // to avoid accidental production deployment with auth disabled
+  return process.env.SKIP_AUTH === 'true'
+}
+
 /**
  * Get the authenticated user from the request
  * Returns null if not authenticated
  */
 export async function getAuthUser(request: NextRequest): Promise<AuthResult> {
+  // Bypass auth for local development when explicitly enabled
+  if (shouldSkipAuth()) {
+    console.warn('[AUTH] Bypassing authentication - using mock DEV_USER (SKIP_AUTH=true)')
+    return { user: DEV_USER, error: null }
+  }
   try {
     const cookieStore = await cookies()
     

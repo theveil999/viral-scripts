@@ -96,9 +96,9 @@ const VOICE_PROFILE_SCHEMA = `{
   },
 
   "audience": {
-    "target_viewer_description": "string | null - who her ideal viewer is (ONLY if explicitly stated)",
-    "fantasy_fulfilled": "string | null - what fantasy she fulfills (ONLY if explicitly stated)",
-    "how_fans_talk_to_her": "string | null - how fans interact (ONLY if she shares actual messages)",
+    "target_viewer_description": "string - who her ideal viewer is (SYNTHESIZE from context: if OnlyFans creator, default is 'Men 18-35 who purchase adult content'. Adjust based on her personality/niche)",
+    "fantasy_fulfilled": "string - what fantasy she fulfills for viewers (SYNTHESIZE from her personality, flirting style, bedroom dynamic, and content type)",
+    "how_fans_talk_to_her": "string | null - how fans interact (if she shares actual messages or fan behavior)",
     "best_performing_content": "string | null - what performs best (ONLY if she mentions it)"
   },
 
@@ -226,30 +226,33 @@ These are DIFFERENT requirements. Do not confuse them.
 
 ---
 
-## AUDIENCE EXTRACTION RULES
+## AUDIENCE EXTRACTION RULES (CRITICAL FOR OF CREATORS)
 
-SYNTHESIZE clean descriptions from what ${modelName} says. Do NOT copy verbatim quotes with filler words.
+For OnlyFans creators, audience data is ESSENTIAL for generating converting scripts. 
+ALWAYS synthesize these fields - do NOT leave them null unless truly impossible.
 
-- **target_viewer_description**: Synthesize into a clean demographic/psychographic description.
-  - If ${modelName} says "people would see me as like the girl next door, like innocent because of my age"
-  - Extract as: "Men attracted to young, innocent 'girl next door' aesthetic"
-  - NOT the raw quote with "like" and "um"
+- **target_viewer_description**: ALWAYS populate this field.
+  - DEFAULT for OF creators: "Men 18-35 who purchase adult content on OnlyFans"
+  - Adjust based on her personality, niche, archetype
+  - If she mentions her followers are "in their 20s" or "older men" - use that
+  - If she's a gamer girl, add "interested in gaming culture"
+  - Example: "Men 22-30 who appreciate genuine, funny women with spicy personalities"
 
-- **fantasy_fulfilled**: Synthesize the fantasy/role they fulfill for viewers.
-  - If ${modelName} says "they lean towards that like oh she's 18 so she's really young you know"
-  - Extract as: "Young, innocent appeal with 'forbidden fruit' energy"
-  - NOT the raw fragmented speech
+- **fantasy_fulfilled**: ALWAYS populate this field by synthesizing from:
+  - Her archetype (girl_next_door = approachable fantasy, bratty_princess = "putting her in her place" fantasy)
+  - Her personality (funny = friend fantasy, vulnerable = emotional connection fantasy)
+  - Her bedroom dynamic (submissive = dominance fantasy, dominant = submission fantasy)
+  - Her flirting style and turn-ons
+  - Example: "The fun, genuine friend who's surprisingly spicy - girlfriend experience with no filter"
 
-- **how_fans_talk_to_her**: Synthesize actual fan behavior mentioned.
-  - If ${modelName} says "people from my TikTok are always like waiting for me to flash"
-  - Extract as: "TikTok followers anticipate risqué content, express eagerness in comments"
-  - NOT the raw quote
+- **how_fans_talk_to_her**: Synthesize if she mentions fan behavior, otherwise use reasonable default:
+  - If mentioned: Synthesize actual fan behavior
+  - If not mentioned but she's OF creator: "Fans appreciate her genuine personality and spicy content"
 
 - **best_performing_content**: Only if ${modelName} mentions specific content that performs well. Otherwise: null
 
-IMPORTANT: These fields should be SYNTHESIZED DESCRIPTIONS suitable for a professional profile, not raw transcribed speech. Remove filler words, fix grammar, create clean summaries.
-
-If ${modelName} doesn't discuss their audience at all, return null for these fields. But if they DO discuss it (even messily), synthesize it cleanly.
+IMPORTANT: For OF creators, target_viewer_description and fantasy_fulfilled should NEVER be null.
+These fields drive the entire script generation direction. Synthesize from available data.
 
 ---
 

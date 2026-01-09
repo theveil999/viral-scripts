@@ -4,7 +4,7 @@
  */
 import { createAdminClient } from '../supabase/admin'
 import { retrieveRelevantCorpus } from './corpus-retrieval'
-import { generateHooks, type GeneratedHook, type HookVariationSet } from './hook-generation'
+import { generateHooks, saveGeneratedHooks, type GeneratedHook, type HookVariationSet } from './hook-generation'
 import { expandScripts, type ExpandedScript } from './script-expansion'
 import { transformVoice, type TransformedScript } from './voice-transformation'
 import { validateScripts, getPassingScripts, getScriptsNeedingRevision } from './script-validation'
@@ -249,6 +249,9 @@ export async function runPipeline(
     callbacks?.onStageError?.('initialization', error)
     throw error
   }
+  
+  // Bug fix: Call onStageComplete for successful initialization
+  callbacks?.onStageComplete?.('initialization', { model_id: modelId, model_name: model.name })
 
   // Initialize stage stats
   const stages: StageStats = {
@@ -308,11 +311,11 @@ export async function runPipeline(
 
   const hookResult = await executeStage('hook_generation', () =>
     generateHooks(modelId, {
-      count: hookCount,
-      temperature: 0.9,
-      variationsPerConcept,
-      enablePcmTracking,
-    })
+    count: hookCount,
+    temperature: 0.9,
+    variationsPerConcept,
+    enablePcmTracking,
+  })
   )
 
   stages.hook_generation = {
@@ -326,6 +329,11 @@ export async function runPipeline(
   callbacks?.onStageComplete?.('hook_generation', stages.hook_generation)
   callbacks?.onProgress?.('hook_generation', hookResult.hooks.length, hookCount)
 
+  // Save hooks for future deduplication tracking (non-blocking)
+  saveGeneratedHooks(modelId, hookResult.hooks).catch(err => {
+    console.warn('Failed to save hooks for tracking:', err)
+  })
+
   // Store variation sets for result
   const variationSets = hookResult.variation_sets
 
@@ -337,6 +345,7 @@ export async function runPipeline(
   if (enableShareabilityScoring && hookResult.hooks.length > 0) {
     console.log('Stage 2.5: Shareability Scoring...')
     const shareStart = Date.now()
+    callbacks?.onStageStart?.('shareability_scoring')
     
     try {
       const shareabilityResult = await scoreShareability(
@@ -356,8 +365,11 @@ export async function runPipeline(
         tokens_used: shareabilityResult.batch_stats.tokens_used,
       }
       totalTokens += shareabilityResult.batch_stats.tokens_used
+      callbacks?.onStageComplete?.('shareability_scoring', stages.shareability_scoring)
     } catch (err) {
-      console.warn('Shareability scoring failed:', err)
+      const error = err instanceof Error ? err : new Error(String(err))
+      console.warn('Shareability scoring failed:', error.message)
+      callbacks?.onStageError?.('shareability_scoring', error)
     }
   }
 
@@ -367,11 +379,13 @@ export async function runPipeline(
   console.log('Stage 3: Script Expansion...')
   const expandStart = Date.now()
 
-  const expansionResult = await expandScripts(modelId, hookResult.hooks, {
+  const expansionResult = await executeStage('script_expansion', () =>
+    expandScripts(modelId, hookResult.hooks, {
     targetDuration,
     corpusLimit,
     ctaType: ctaStyle,
   })
+  )
 
   stages.script_expansion = {
     expanded: expansionResult.scripts.length,
@@ -380,6 +394,8 @@ export async function runPipeline(
     tokens_used: expansionResult.expansion_stats.tokens_used,
   }
   totalTokens += expansionResult.expansion_stats.tokens_used
+  callbacks?.onStageComplete?.('script_expansion', stages.script_expansion)
+  callbacks?.onProgress?.('script_expansion', expansionResult.scripts.length, hookResult.hooks.length)
 
   // ===================
   // STAGE 4: Voice Transformation
@@ -387,10 +403,12 @@ export async function runPipeline(
   console.log('Stage 4: Voice Transformation...')
   const transformStart = Date.now()
 
-  const transformResult = await transformVoice(modelId, expansionResult.scripts, {
+  const transformResult = await executeStage('voice_transformation', () =>
+    transformVoice(modelId, expansionResult.scripts, {
     batchSize: 5,
     temperature: 0.7,
   })
+  )
 
   stages.voice_transformation = {
     transformed: transformResult.transformed_scripts.length,
@@ -399,12 +417,15 @@ export async function runPipeline(
     tokens_used: transformResult.transformation_stats.tokens_used,
   }
   totalTokens += transformResult.transformation_stats.tokens_used
+  callbacks?.onStageComplete?.('voice_transformation', stages.voice_transformation)
+  callbacks?.onProgress?.('voice_transformation', transformResult.transformed_scripts.length, expansionResult.scripts.length)
 
   // ===================
   // STAGE 5: Validation
   // ===================
   console.log('Stage 5: Validation...')
   const validationStart = Date.now()
+  callbacks?.onStageStart?.('validation')
 
   let currentScripts = transformResult.transformed_scripts
   let validationResult = await validateScripts(modelId, currentScripts)
@@ -466,6 +487,7 @@ export async function runPipeline(
     tokens_used: validationTokens,
   }
   totalTokens += validationTokens
+  callbacks?.onStageComplete?.('validation', stages.validation)
 
   // ===================
   // FINAL: Filter passing scripts

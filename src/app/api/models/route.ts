@@ -99,7 +99,8 @@ export async function POST(request: NextRequest) {
 
     // Generate voice embedding for semantic matching (non-blocking)
     try {
-      const voiceFingerprint = buildVoiceFingerprint(voice_profile);
+      // Cast vp to satisfy VoiceProfileInput (null values treated as undefined)
+      const voiceFingerprint = buildVoiceFingerprint(vp as Parameters<typeof buildVoiceFingerprint>[0]);
       if (voiceFingerprint.length > 50) {
         const embedding = await generateEmbedding(voiceFingerprint);
 

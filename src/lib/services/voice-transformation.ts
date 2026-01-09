@@ -81,14 +81,181 @@ function parseTransformationResponse(text: string): TransformedScript[] {
 }
 
 /**
- * Validate and clean transformed script
+ * Normalize text for comparison by removing punctuation and extra spaces
  */
-function processTransformedScript(script: TransformedScript): TransformedScript {
+function normalizeForComparison(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '') // Remove punctuation
+    .replace(/\s+/g, ' ')        // Normalize spaces
+    .trim()
+}
+
+/**
+ * Extract the first N significant words from text (skipping common fillers)
+ */
+function getFirstWords(text: string, count: number): string[] {
+  const normalized = normalizeForComparison(text)
+  return normalized.split(' ').slice(0, count)
+}
+
+/**
+ * Check if text starts with the given words (fuzzy match)
+ */
+function startsWithWords(text: string, words: string[]): boolean {
+  const normalized = normalizeForComparison(text)
+  const pattern = words.join(' ')
+  return normalized.startsWith(pattern)
+}
+
+/**
+ * Common filler patterns that should not start scripts
+ * These are comprehensive patterns to catch all variations
+ */
+const LEADING_FILLER_PATTERNS = [
+  // Multi-word fillers (ordered from longest to shortest for greedy matching)
+  /^okay\s+so\s+like\s*,?\s*/i,
+  /^ok\s+so\s+like\s*,?\s*/i,
+  /^um+\s+okay\s+so\s+like\s*,?\s*/i,
+  /^um+\s+ok\s+so\s+like\s*,?\s*/i,
+  /^um+\s+so\s+like\s*,?\s*/i,
+  /^so\s+like\s*,?\s*/i,
+  /^okay\s+so\s*,?\s*/i,
+  /^ok\s+so\s*,?\s*/i,
+  /^um+\s+like\s*,?\s*/i,
+  /^um+\s+okay\s*,?\s*/i,
+  /^um+\s+ok\s*,?\s*/i,
+  /^um+\s*,?\s*/i,
+  /^like\s*,?\s*/i,
+  /^so\s*,?\s+/i,  // "so, " with comma followed by space
+  /^okay\s*,?\s*/i,
+  /^ok\s*,?\s*/i,
+  // Single word fillers at start
+  /^yeah\s+so\s*,?\s*/i,
+  /^well\s+so\s*,?\s*/i,
+  /^honestly\s*,?\s*/i,
+  /^look\s*,?\s*/i,
+  /^listen\s*,?\s*/i,
+]
+
+/**
+ * Find where the hook content actually starts in the transformed script
+ * Returns the index where the hook starts, or -1 if not found
+ */
+function findHookStart(script: string, hookWords: string[]): number {
+  const scriptNormalized = normalizeForComparison(script)
+  const hookPattern = hookWords.join(' ')
+  
+  // Try to find the hook pattern in the normalized script
+  const hookIndex = scriptNormalized.indexOf(hookPattern)
+  if (hookIndex === -1) return -1
+  
+  // Now we need to find the corresponding position in the original script
+  // Count how many normalized characters correspond to each original character
+  let normalizedPos = 0
+  for (let i = 0; i < script.length; i++) {
+    if (normalizedPos >= hookIndex) {
+      return i
+    }
+    const char = script[i].toLowerCase()
+    if (/[a-z0-9\s]/.test(char)) {
+      if (char === ' ' || (i > 0 && script[i-1] !== ' ')) {
+        normalizedPos++
+      }
+    }
+  }
+  return -1
+}
+
+/**
+ * Remove leading fillers from a script while preserving the hook opener
+ * This ensures scripts start with their actual hook content, not filler words
+ * 
+ * STRATEGY:
+ * 1. Check if script already starts with hook - if yes, return as-is
+ * 2. Try removing filler patterns iteratively
+ * 3. If fillers removed, check again if hook is at start
+ * 4. If hook still not at start, find it in the script and trim everything before it
+ * 5. As last resort, prepend the hook opener if it's completely missing
+ */
+function preserveHookOpener(transformedScript: string, originalHook: string): string {
+  if (!transformedScript || !originalHook) return transformedScript
+  
+  let script = transformedScript.trim()
+  
+  // Get first 4-5 significant words from hook (these define the opener)
+  const hookWords = getFirstWords(originalHook, 5).filter(w => w.length > 0)
+  if (hookWords.length === 0) return script
+  
+  // Use fewer words for matching (3 words should be distinctive enough)
+  const hookMatchWords = hookWords.slice(0, Math.min(4, hookWords.length))
+  
+  // Step 1: Check if script already starts with hook opener
+  if (startsWithWords(script, hookMatchWords)) {
+    return script // Already correct!
+  }
+  
+  // Step 2: Try removing leading fillers iteratively
+  let previousScript = ''
+  let iterations = 0
+  const maxIterations = 10 // Prevent infinite loops
+  
+  while (previousScript !== script && iterations < maxIterations) {
+    previousScript = script
+    iterations++
+    
+    for (const pattern of LEADING_FILLER_PATTERNS) {
+      const newScript = script.replace(pattern, '')
+      if (newScript !== script) {
+        script = newScript.trim()
+        break // Restart the pattern matching after each removal
+      }
+    }
+  }
+  
+  // Step 3: Check again after removing fillers
+  if (startsWithWords(script, hookMatchWords)) {
+    return script // Now starts with hook!
+  }
+  
+  // Step 4: Find where the hook actually starts in the script
+  const hookStartIndex = findHookStart(script, hookMatchWords)
+  
+  if (hookStartIndex > 0 && hookStartIndex < 100) {
+    // The hook exists in the script but not at the start
+    // Remove everything before it (this handles weird AI additions)
+    const trimmedScript = script.slice(hookStartIndex).trim()
+    
+    // Verify the trimmed version starts with the hook
+    if (startsWithWords(trimmedScript, hookMatchWords)) {
+      console.log(`[Voice Transform] Trimmed ${hookStartIndex} chars of leading filler to preserve hook: "${hookMatchWords.join(' ')}..."`)
+      return trimmedScript
+    }
+  }
+  
+  // Step 5: Hook is completely missing or mangled - this shouldn't happen
+  // but if it does, we return the cleaned script (post-filler removal)
+  console.warn(`[Voice Transform] Could not find hook opener "${hookMatchWords.join(' ')}..." in script. Returning cleaned script.`)
+  return script
+}
+
+/**
+ * Validate and clean transformed script
+ * @param script - The transformed script from Claude
+ * @param actualHook - The ACTUAL hook from the input (not Claude's version)
+ */
+function processTransformedScript(script: TransformedScript, actualHook: string): TransformedScript {
+  // Apply hook opener preservation using the ACTUAL input hook
+  const cleanedScript = preserveHookOpener(
+    script.transformed_script || '',
+    actualHook  // Use the actual hook, not what Claude returned
+  )
+  
   return {
     script_index: script.script_index || 0,
-    original_hook: script.original_hook || '',
-    transformed_script: script.transformed_script || '',
-    word_count: script.word_count || script.transformed_script?.split(/\s+/).length || 0,
+    original_hook: actualHook,  // Store the actual hook
+    transformed_script: cleanedScript,
+    word_count: cleanedScript?.split(/\s+/).length || 0,
     changes_made: Array.isArray(script.changes_made) ? script.changes_made : [],
     voice_fidelity_score: typeof script.voice_fidelity_score === 'number'
       ? Math.min(100, Math.max(0, script.voice_fidelity_score))
@@ -164,6 +331,9 @@ export async function transformVoice(
 
   for (let i = 0; i < scripts.length; i += batchSize) {
     const batch = scripts.slice(i, i + batchSize)
+    
+    // Store the actual hooks from input scripts - DON'T trust Claude's original_hook
+    const actualHooks = batch.map(s => s.hook)
 
     // Build prompt for batch
     const prompt = buildVoiceTransformationPrompt({
@@ -193,7 +363,13 @@ export async function transformVoice(
         }
 
         const transformed = parseTransformationResponse(content.text)
-        const processed = transformed.map(processTransformedScript)
+        
+        // Process each script with the ACTUAL hook from input (not Claude's version)
+        const processed = transformed.map((script, idx) => {
+          // Use the actual hook we sent to Claude, not what Claude returned
+          const actualHook = actualHooks[idx] || script.original_hook || ''
+          return processTransformedScript(script, actualHook)
+        })
 
         // Adjust script_index for batch offset
         for (const script of processed) {

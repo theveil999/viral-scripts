@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Plus, Users, Zap, Sparkles } from "lucide-react";
-import { motion } from "framer-motion";
+import { Plus, Users, Zap, Sparkles, Trash2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import type { Model } from "@/lib/supabase/types";
 import { Button, Card, ArchetypeBadge, Badge, Avatar, SkeletonCard } from "@/components/ui";
@@ -12,24 +12,47 @@ export default function ModelsPage() {
   const [models, setModels] = useState<Model[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  async function loadModels() {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("models")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      setError(error.message);
+    } else {
+      setModels(data as unknown as Model[]);
+    }
+    setLoading(false);
+  }
 
   useEffect(() => {
-    async function loadModels() {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("models")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        setError(error.message);
-      } else {
-        setModels(data as unknown as Model[]);
-      }
-      setLoading(false);
-    }
     loadModels();
   }, []);
+
+  async function handleDelete(id: string, name: string) {
+    if (!confirm(`Delete "${name}"? This will also delete all their scripts and cannot be undone.`)) {
+      return;
+    }
+
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/models/${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to delete');
+      }
+      // Remove from local state
+      setModels(prev => prev?.filter(m => m.id !== id) || null);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to delete creator');
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   if (error) {
     return (
@@ -61,16 +84,23 @@ export default function ModelsPage() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
         >
-          {models.map((model, index) => (
-            <motion.div
-              key={model.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
-            >
-              <ModelCard model={model} />
-            </motion.div>
-          ))}
+          <AnimatePresence>
+            {models.map((model, index) => (
+              <motion.div
+                key={model.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
+              >
+                <ModelCard 
+                  model={model} 
+                  onDelete={handleDelete}
+                  isDeleting={deletingId === model.id}
+                />
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </motion.div>
       )}
     </div>
@@ -126,73 +156,101 @@ function EmptyState() {
   );
 }
 
-function ModelCard({ model }: { model: Model }) {
+interface ModelCardProps {
+  model: Model;
+  onDelete: (id: string, name: string) => void;
+  isDeleting: boolean;
+}
+
+function ModelCard({ model, onDelete, isDeleting }: ModelCardProps) {
   const profile = model.voice_profile;
   const displayName = model.stage_name || model.name;
 
   return (
-    <Card href={`/models/${model.id}`} className="group">
-      <div className="flex items-start gap-3 mb-4">
-        <Avatar name={displayName} size="lg" />
-        <div className="flex-1 min-w-0">
-          <h2 className="font-semibold text-zinc-100 truncate group-hover:text-purple-400 transition-colors">
-            {displayName}
-          </h2>
-          {model.stage_name && model.name && (
-            <p className="text-sm text-zinc-500 truncate">{model.name}</p>
-          )}
-        </div>
-        <EnergyBadge level={profile?.personality?.energy_level} />
-      </div>
+    <div className="relative group">
+      {/* Delete button - appears on hover */}
+      <button
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onDelete(model.id, displayName);
+        }}
+        disabled={isDeleting}
+        className="absolute -top-2 -right-2 z-10 w-8 h-8 rounded-full bg-red-500/90 hover:bg-red-500 
+                   flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all
+                   shadow-lg shadow-red-500/20 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
+        title="Delete creator"
+      >
+        {isDeleting ? (
+          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+        ) : (
+          <Trash2 className="w-4 h-4 text-white" />
+        )}
+      </button>
 
-      {/* Archetypes */}
-      {model.archetype_tags && model.archetype_tags.length > 0 && (
-        <div className="flex gap-1.5 flex-wrap mb-4">
-          {model.archetype_tags.slice(0, 3).map((tag) => (
-            <ArchetypeBadge key={tag} archetype={tag} />
-          ))}
-          {model.archetype_tags.length > 3 && (
-            <Badge variant="default">+{model.archetype_tags.length - 3}</Badge>
-          )}
+      <Card href={`/models/${model.id}`} className="group/card">
+        <div className="flex items-start gap-3 mb-4">
+          <Avatar name={displayName} size="lg" />
+          <div className="flex-1 min-w-0">
+            <h2 className="font-semibold text-zinc-100 truncate group-hover/card:text-purple-400 transition-colors">
+              {displayName}
+            </h2>
+            {model.stage_name && model.name && (
+              <p className="text-sm text-zinc-500 truncate">{model.name}</p>
+            )}
+          </div>
+          <EnergyBadge level={profile?.personality?.energy_level} />
         </div>
-      )}
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-2 gap-3 text-sm mb-4">
-        <div className="flex items-center gap-2">
-          <span className="text-zinc-500">Explicitness</span>
-          <span className="text-zinc-300 capitalize">
-            {model.explicitness_level || "—"}
+        {/* Archetypes */}
+        {model.archetype_tags && model.archetype_tags.length > 0 && (
+          <div className="flex gap-1.5 flex-wrap mb-4">
+            {model.archetype_tags.slice(0, 3).map((tag) => (
+              <ArchetypeBadge key={tag} archetype={tag} />
+            ))}
+            {model.archetype_tags.length > 3 && (
+              <Badge variant="default">+{model.archetype_tags.length - 3}</Badge>
+            )}
+          </div>
+        )}
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 gap-3 text-sm mb-4">
+          <div className="flex items-center gap-2">
+            <span className="text-zinc-500">Explicitness</span>
+            <span className="text-zinc-300 capitalize">
+              {model.explicitness_level || "—"}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-zinc-500">Swearing</span>
+            <span className="text-zinc-300 capitalize">
+              {profile?.voice_mechanics?.swear_frequency || "—"}
+            </span>
+          </div>
+        </div>
+
+        {/* Bio */}
+        {profile?.identity?.quick_bio && (
+          <p className="text-sm text-zinc-400 line-clamp-2 mb-4">
+            {profile.identity.quick_bio}
+          </p>
+        )}
+
+        {/* Footer */}
+        <div className="pt-4 border-t border-zinc-800/50 flex justify-between items-center text-xs">
+          <span className="text-zinc-500">
+            Added {new Date(model.created_at).toLocaleDateString()}
+          </span>
+          <span className="text-purple-400 group-hover/card:text-purple-300 transition-colors flex items-center gap-1">
+            View Profile
+            <svg className="w-3 h-3 group-hover/card:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
           </span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-zinc-500">Swearing</span>
-          <span className="text-zinc-300 capitalize">
-            {profile?.voice_mechanics?.swear_frequency || "—"}
-          </span>
-        </div>
-      </div>
-
-      {/* Bio */}
-      {profile?.identity?.quick_bio && (
-        <p className="text-sm text-zinc-400 line-clamp-2 mb-4">
-          {profile.identity.quick_bio}
-        </p>
-      )}
-
-      {/* Footer */}
-      <div className="pt-4 border-t border-zinc-800/50 flex justify-between items-center text-xs">
-        <span className="text-zinc-500">
-          Added {new Date(model.created_at).toLocaleDateString()}
-        </span>
-        <span className="text-purple-400 group-hover:text-purple-300 transition-colors flex items-center gap-1">
-          View Profile
-          <svg className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </span>
-      </div>
-    </Card>
+      </Card>
+    </div>
   );
 }
 

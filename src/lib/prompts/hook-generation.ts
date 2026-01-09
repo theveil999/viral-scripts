@@ -19,6 +19,97 @@ export interface HookGenerationParams {
 // PCM (Process Communication Model) personality types
 export type PcmType = 'harmonizer' | 'thinker' | 'rebel' | 'persister' | 'imaginer' | 'promoter'
 
+// CRITICAL: Opener patterns extracted from 600+ viral hooks
+// Each opener MUST be used for variety - no repetition!
+const OPENER_PATTERNS = {
+  // DESIRE/NEED openers (15% of hooks)
+  desire: [
+    { pattern: "I want a man who...", corpus: "i want a man who's gonna walk around holding on the back of my neck like he owns me" },
+    { pattern: "I need a man who...", corpus: "i need a man who can go back to back because i've always had this fantasy" },
+    { pattern: "I want somebody who...", corpus: "i want to be with somebody who's so obsessed with me" },
+    { pattern: "I just want...", corpus: "I just want a man who's gonna kiss me like he missed me" },
+  ],
+  // CONDITIONAL openers (15% of hooks)
+  conditional: [
+    { pattern: "If you [do X]...", corpus: "if you're giving me back shots and you aren't pulling my hair, what are we even doing?" },
+    { pattern: "If he [does X]...", corpus: "if he plans you a date and you didn't even have to ask, you shouldn't even be waiting" },
+    { pattern: "If she [does X]...", corpus: "If she carries one of these around with her everywhere she goes, she gives really good top" },
+    { pattern: "If we ever...", corpus: "If we ever live together, just know I will randomly come into your office" },
+    { pattern: "If it slips in...", corpus: "If it slips in the back door on accident, you're not gonna catch me saying wrong hole" },
+  ],
+  // QUESTION openers (15% of hooks)
+  question: [
+    { pattern: "Do you ever...", corpus: "Do you ever wake up from a really, and I mean really good dream, just as the best part is about to start?" },
+    { pattern: "Have you ever...", corpus: "Have you ever met a guy with such pretty eyes and nice arms and a low voice" },
+    { pattern: "Ladies, do you...", corpus: "ladies do you ever get like soaked just from a man's voice" },
+    { pattern: "Where are the guys who...", corpus: "where are the guys who go for multiple rounds" },
+    { pattern: "Why is it so...", corpus: "Why is it so fucking hot to me when a man says..." },
+  ],
+  // SUPERLATIVE openers (10% of hooks)
+  superlative: [
+    { pattern: "There is nothing hotter than...", corpus: "there is nothing fucking hotter than when a man is hittin' it so good" },
+    { pattern: "Nothing makes me [feel] faster than...", corpus: "Nothing gets my pink taco sopping faster than when a man says he wants to..." },
+    { pattern: "The fucking hottest thing...", corpus: "The fucking hottest thing that a guy can do is talk during" },
+    { pattern: "The best kind of...", corpus: "The best kind of is when you're just bedrotting all day together" },
+    { pattern: "The key to...", corpus: "The key to giving a really good job is actually the things that you say to him" },
+  ],
+  // PREFERENCE/LOVE openers (10% of hooks)
+  preference: [
+    { pattern: "I fucking love when...", corpus: "i fucking love when men talk during sex" },
+    { pattern: "I love a man who...", corpus: "I love a man who's not afraid to whimper" },
+    { pattern: "Love when...", corpus: "Love when me and my man have similar hobbies" },
+    { pattern: "I think it is so hot when...", corpus: "I think it is so fucking hot when a guy is into roleplay" },
+  ],
+  // DEFIANT openers (10% of hooks)
+  defiant: [
+    { pattern: "I don't care what people say...", corpus: "I don't care what people say, okay? I want a man who's gonna walk around holding on the back of my neck" },
+    { pattern: "I don't care if...", corpus: "I don't care if you're busy, okay? If you're my man and you work from home, I will come in and randomly flash you" },
+    { pattern: "I don't give a fuck...", corpus: "I do not care how long you last, okay? What I do care about is how quickly afterwards we can go again" },
+    { pattern: "I am not a [X], but...", corpus: "I am not a pillow princess, but if a man is gonna do the work, I fucking love when he will just..." },
+  ],
+  // OBSERVATION openers (10% of hooks)
+  observation: [
+    { pattern: "Every time I see...", corpus: "Every time I see a man with some veiny forearms I can't help but picture..." },
+    { pattern: "When a man [does X]...", corpus: "when a man's opening a pickle jar for me and you see his like forearm flexing" },
+    { pattern: "Whenever I'm...", corpus: "whenever i'm in a relationship i love sending videos of myself getting ready to my partner" },
+    { pattern: "There's something about...", corpus: "There's something about a man with a mustache that's just so slutty" },
+    { pattern: "Guys who...", corpus: "Guys who have veiny feel the fucking best because it's so much fucking texture" },
+  ],
+  // CONFESSION/TOXIC openers (10% of hooks)
+  confession: [
+    { pattern: "My toxic trait is...", corpus: "My toxic trait is that I'll look you in the eyes, smile sweetly, and say you don't have to pull out" },
+    { pattern: "I'm not ashamed to admit...", corpus: "I'm not ashamed to admit that it's been a while, okay?" },
+    { pattern: "I'm not gonna lie...", corpus: "i'm not gonna lie i'm usually a brat on purpose because i fucking love the type of..." },
+    { pattern: "My problem is...", corpus: "my problem is I get attached to anyone who gives me attention" },
+  ],
+  // ADVICE/TIP openers (5% of hooks)
+  advice: [
+    { pattern: "A little tip for...", corpus: "A little tip for the men, do not just make her one time, okay?" },
+    { pattern: "If you want to make...", corpus: "if i want to make a man fall in love with me i will worship his" },
+    { pattern: "Alright, listen...", corpus: "Alright, listen, you know that you're giving good when..." },
+    { pattern: "You want to know how to...", corpus: "you want to know how to drive him crazy when you're giving him" },
+  ],
+  // DIRECT ADDRESS openers (5% of hooks)
+  direct_address: [
+    { pattern: "Guys, you do not need to...", corpus: "Guys, you do not need to be embarrassed if you're lasting less than 15 minutes" },
+    { pattern: "Ladies, if you...", corpus: "Ladies, if you don't have to ask your man to give you..." },
+    { pattern: "Men who...", corpus: "Men who talk during drive me crazy in the best way" },
+    { pattern: "Y'all need to...", corpus: "y'all need to start giving the nerdy guys a chance" },
+  ],
+  // STORYTIME openers (rare - 3% of hooks)
+  storytime: [
+    { pattern: "This is a random story time...", corpus: "This is a random story time, but one time my ex blindfolded me" },
+    { pattern: "Somebody [did X] and...", corpus: "Somebody recognized me at the airport and I was in the middle of reading..." },
+    { pattern: "So this guy...", corpus: "So this guy grabbed my chin and said 'look at me'" },
+  ],
+  // PHILOSOPHICAL/BOLD openers (2% of hooks)
+  philosophical: [
+    { pattern: "You only live once...", corpus: "You only live once. One life. That's all you get. That's why I want to know what it's like to get spit-roasted" },
+    { pattern: "Sometimes it hits me that...", corpus: "sometimes it hits me that we really are just animals down at the core" },
+    { pattern: "I don't think anyone is truly...", corpus: "I don't think anyone is ever truly alive until they experience DP" },
+  ],
+}
+
 // PCM vocabulary patterns and hook styles
 const PCM_HOOK_PATTERNS: Record<PcmType, {
   population_pct: number
@@ -122,46 +213,68 @@ const PARASOCIAL_LEVER_DESCRIPTIONS: Record<string, string> = {
   protector_dynamic: 'Making viewer feel cared for or protected',
 }
 
-const HOOK_TYPE_FRAMEWORKS: Record<string, { description: string; pattern: string; example: string }> = {
+// CRITICAL: These frameworks MUST create viewer-qualifying hooks that make the viewer feel CHOSEN
+// NOT confessional storytelling about the creator's personal experiences
+const HOOK_TYPE_FRAMEWORKS: Record<string, { description: string; pattern: string; example: string; corpus_example: string }> = {
   bold_statement: {
-    description: 'Provocative claim that demands attention',
-    pattern: '[Unexpected claim] + [qualifier or twist]',
-    example: "I'm the worst girlfriend ever. And that's why he won't leave.",
+    description: 'Statement about what SHE wants/needs FROM the viewer or a type of man',
+    pattern: 'I [want/need/love] a man who [specific behavior]',
+    example: "I need a man who isn't afraid to devour me like his last meal",
+    corpus_example: "i need a man who can go back to back because i've always had this fantasy",
   },
   question: {
-    description: 'Rhetorical or direct question that creates curiosity gap',
-    pattern: 'Why do/does [specific group] always [behavior]?',
-    example: 'Why do men ghost right when things get good?',
+    description: 'Question that qualifies the viewer OR asks if they relate to something sexual',
+    pattern: 'Do you ever [sexual thought/behavior]? / Are you the type who [desirable trait]?',
+    example: 'Do you ever get so turned on by a voice note that you have to sit down?',
+    corpus_example: "ladies do you ever get like soaked just from a man's voice",
   },
   confession: {
-    description: 'Vulnerable admission that feels exclusive',
-    pattern: 'My [toxic trait/secret/confession] is [specific detail]',
-    example: 'My toxic trait is catching feelings after one good text.',
+    description: 'Confession about what TURNS HER ON about a type of man (not a personal story)',
+    pattern: 'My toxic trait is [how she reacts to a type of man]',
+    example: "My toxic trait is if you grab my chin and look in my eyes, I'm yours forever",
+    corpus_example: "My toxic trait is that I'll look you in the eyes, smile sweetly, and say you don't have to pull out",
   },
   challenge: {
-    description: 'Directly challenges viewer or calls them out',
-    pattern: "If you [behavior], you're [judgment]",
-    example: "If you don't double-text, you don't actually like them.",
+    description: 'Directly challenges viewer to be the type she wants',
+    pattern: "If you [do/don't do X]... [reward/judgment]",
+    example: "If you call me good girl without me asking? Marry me immediately.",
+    corpus_example: "If she carries one of these around with her everywhere she goes, she gives really good top, okay?",
   },
   relatable: {
-    description: 'Shared experience that triggers recognition',
-    pattern: 'POV: [specific scenario]',
-    example: "POV: You're convincing yourself he's just bad at texting",
+    description: 'Relatable SEXUAL thought that makes viewer think "she wants someone like me"',
+    pattern: 'When a man [does X], I immediately [sexual reaction]',
+    example: "When a man puts his hand on my lower back in public, I'm already thinking about what I'll do to him later",
+    corpus_example: "whenever i'm in a relationship i love sending videos of myself getting ready to my partner",
   },
   fantasy: {
-    description: 'Aspirational or desire-driven hook',
-    pattern: 'I just want [specific fantasy]',
-    example: 'I just want a man who [long specific list]',
+    description: 'Specific fantasy about what she wants a man to DO to her (viewer imagines being that man)',
+    pattern: 'I want a man who will [very specific sexual/romantic act]',
+    example: "I want a man who will grab my hair and whisper 'you're mine' while he's inside me",
+    corpus_example: "i want a man who's gonna walk around holding on the back of my neck like he owns me",
   },
   hot_take: {
-    description: 'Controversial opinion stated as fact',
-    pattern: '[Controversial statement]. I said what I said.',
-    example: "Body count doesn't matter. Emotional damage does.",
+    description: 'Controversial sexual opinion that qualifies men she wants',
+    pattern: 'Guys who [do X] are [positive/negative]... and I mean that',
+    example: "Guys who can cook? Immediate marriage material. I don't make the rules.",
+    corpus_example: "i fucking love when men talk during sex like, i wanna hear how good it feels for you",
   },
   storytime: {
-    description: 'Teases a story that demands completion',
-    pattern: 'So I [shocking action/situation]...',
-    example: 'So I accidentally sent that to my boss...',
+    description: 'Sexual storytime that makes viewer imagine being the man in the story',
+    pattern: 'So this guy [did something to me] and now I [reaction]',
+    example: "So he grabbed my chin and said 'look at me when I'm talking to you' and now I'm pregnant",
+    corpus_example: "one time my ex blindfolded me and got out some icy hot and he put it on my pink taco",
+  },
+  advice: {
+    description: 'Sexual tip/advice directed TO men about how to please her/women',
+    pattern: 'If you want to [drive her crazy/make her obsessed]... [specific action]',
+    example: "If you want to make me absolutely feral, call me a good girl when I least expect it",
+    corpus_example: "if i want to make a man fall in love with me i will worship his",
+  },
+  thirst_commentary: {
+    description: 'Commentary on something that turns her on (viewer can be that thing)',
+    pattern: 'There is nothing hotter than [specific type of man/behavior]',
+    example: "There is nothing hotter than a man who knows exactly where to put his hands without asking",
+    corpus_example: "there is nothing fucking hotter than when a man is hittin' it so good",
   },
 }
 
@@ -297,6 +410,18 @@ ${signatureSpicyPhrases.length > 0 ? signatureSpicyPhrases.map(p => `- "${p}"`).
     ? recentHooks.map((h) => `- "${h}"`).join('\n')
     : 'None - this is the first batch'
 
+  // Extract brand anchors (CRITICAL for unique content)
+  const content = voiceProfile.content as Record<string, unknown>
+  const brandAnchors = (content?.brand_anchors as string[]) || []
+  const brandAnchorsSection = brandAnchors.length > 0
+    ? `Brand Obsessions (USE THESE - they're HER unique differentiators):\n${brandAnchors.map(b => `- ${b}`).join('\n')}`
+    : ''
+
+  // Extract turn-ons for fantasy hooks
+  const turnOns = (spicy?.turn_ons_discussed as string[]) || []
+  const herType = (spicy?.her_type as string) || ''
+  const bedroomDynamic = (spicy?.bedroom_dynamic as string) || ''
+  
   // Build audience targeting section (CRITICAL for correct content direction)
   const audienceSection = `
 ## ⚠️ CRITICAL: TARGET AUDIENCE (READ THIS CAREFULLY)
@@ -312,6 +437,44 @@ HOW FANS TALK TO HER: ${howFansTalk}
 - DO NOT write content that sounds like a woman talking to her girlfriends
 - DO write content where SHE is speaking TO or ABOUT men in a way that makes male viewers feel seen
 - The viewer should imagine: "She's talking about ME" or "I wish she'd say this to ME"
+
+## 🎯 VIRAL OF CONVERSION PATTERNS (MUST USE)
+
+The hooks that convert viewers to OnlyFans subscribers follow these patterns:
+
+**1. FANTASY INVITATION (highest converting)**
+Pattern: "If you're the type who [specific behavior]... [I need you / marry me / you fucked up]"
+- "If you're the type who grabs me by the neck and whispers 'good girl'? Marry me right now."
+- Makes viewer feel CHOSEN and imagine being that person
+
+**2. QUALIFIER CHALLENGE**  
+Pattern: "If you [do/don't do X]... [judgment/reward]"
+- "If you do this without being asked... you're the one"
+- Challenges viewer to prove they're worthy
+
+**3. CONSEQUENCE LOCK**
+Pattern: "You [did X]... [possessive consequence]"
+- "You fucked up, okay? Because now I'm never letting you go"
+- Creates parasocial attachment
+
+**4. SPECIFIC DESIRE**
+Pattern: "I want a man who [very specific behavior/trait]"  
+- "I want a man who will devour my pink taco like his life depends on it"
+- NOT generic - must be vivid and specific
+
+${turnOns.length > 0 ? `
+## 🔥 HER TURN-ONS (Use these for fantasy hooks)
+${turnOns.map(t => `- ${t}`).join('\n')}
+${herType ? `Her type: ${herType}` : ''}
+${bedroomDynamic ? `Bedroom dynamic: ${bedroomDynamic}` : ''}
+` : ''}
+
+${brandAnchorsSection ? `
+## 🏷️ BRAND ANCHORS (Her unique differentiators)
+${brandAnchorsSection}
+These are things ONLY she can talk about - use them to make hooks unique to her.
+Example: If she's obsessed with Taco Bell, hooks can reference it for unique content no other creator can copy.
+` : ''}
 `
 
   return `You are a viral hook writer for short-form video content. Generate ${count} unique hooks for ${modelName}.
@@ -345,6 +508,62 @@ Study these STRUCTURE PATTERNS - the hook type, word count, lever combinations t
 
 ${corpusSection}
 
+## 📚 CORPUS OPENER VARIETY SHOWCASE (STUDY THIS DIVERSITY)
+
+These are ACTUAL viral hooks - notice how NO TWO start the same way:
+
+**DESIRE openers:**
+- "i want a man who's gonna walk around holding on the back of my neck like he owns me"
+- "I need a man who can go back to back"
+- "I just want somebody who's gonna break my back, not my heart"
+
+**CONDITIONAL openers:**
+- "If she carries one of these around with her everywhere she goes, she gives really good top"
+- "if you're giving me back shots and you aren't pulling my hair, what are we even doing?"
+- "If it slips in the back door on accident, you're not gonna catch me saying wrong hole"
+
+**QUESTION openers:**
+- "ladies do you ever get like soaked just from a man's voice"
+- "Do you ever wake up from a really, and I mean really good dream"
+- "where are the guys who go for multiple rounds"
+
+**SUPERLATIVE openers:**
+- "The fucking hottest thing that a guy can do is talk during"
+- "there is nothing fucking hotter than when a man is hittin' it so good"
+- "Nothing gets my pink taco sopping faster than when a man says he wants to..."
+
+**PREFERENCE openers:**
+- "I fucking love when men talk during sex"
+- "I love a man who's not afraid to whimper"
+- "I think it is so fucking hot when a guy is into roleplay"
+
+**DEFIANT openers:**
+- "I don't care what people say, okay? I want a man who's gonna..."
+- "I do not care how long you last, okay?"
+- "I am not a pillow princess, but if a man is gonna do the work..."
+
+**OBSERVATION openers:**
+- "Every time I see a man with some veiny forearms I can't help but picture"
+- "when a man's opening a pickle jar for me and you see his like forearm flexing"
+- "There's something about a man with a mustache that's just so slutty"
+
+**CONFESSION openers:**
+- "My toxic trait is that I'll look you in the eyes, smile sweetly, and say you don't have to pull out"
+- "i'm not gonna lie i'm usually a brat on purpose"
+- "I'm not ashamed to admit that it's been a while"
+
+**ADVICE openers:**
+- "A little tip for the men, do not just make her one time"
+- "you want to know how to drive him crazy when you're giving him"
+- "If you want to make sure that your girl never stops giving you spontaneous..."
+
+**DIRECT ADDRESS openers:**
+- "Guys, you do not need to be embarrassed if you're lasting less than 15 minutes"
+- "Ladies, if you don't have to ask your man to give you..."
+- "Men who talk during drive me crazy in the best way"
+
+**YOUR HOOKS MUST HAVE THIS LEVEL OF VARIETY.**
+
 ## HOOK TYPE DISTRIBUTION
 
 Generate hooks in these categories:
@@ -358,14 +577,187 @@ ${frameworksSection}
 
 1. Each hook must be 5-12 words (shorter = better, viral hooks are PUNCHY)
 2. First 3 words are CRITICAL - they determine if someone stops scrolling
-3. Use ${modelName}'s EXACT vocabulary - her euphemisms, her terms, her phrases
-4. Include her catchphrases or sentence starters where natural
-5. Match her explicitness level: ${explicitnessLevel}
-6. Activate 2-3 parasocial strengths per hook (top performers combine multiple levers)
-7. NO generic hooks - must feel like ONLY she would say it
-8. Be SPECIFIC - "soaked from his voice" not "turned on by him"
-9. Vary the structure - don't repeat the same pattern
-10. NO hashtags, NO emojis, NO stage directions
+3. Use ${modelName}'s VOCABULARY (euphemisms, terms) BUT not her filler words in hooks
+4. Match her explicitness level: ${explicitnessLevel}
+5. Activate 2-3 parasocial strengths per hook (top performers combine multiple levers)
+6. NO generic hooks - must feel like ONLY she would say it
+7. Be SPECIFIC - "soaked from his voice" not "turned on by him"
+8. NO hashtags, NO emojis, NO stage directions
+
+## ⚠️ CRITICAL: OPENER DIVERSITY (MANDATORY - WILL REJECT IF VIOLATED)
+
+You MUST rotate through DIFFERENT opener categories. NO TWO HOOKS can start the same way.
+
+### OPENER CATEGORIES (Use at least 8 different categories for ${count} hooks):
+
+**DESIRE/NEED (15%)**: Start with wanting/needing
+- "I want a man who..." / "I need a man who..." / "I just want..."
+- Corpus: "i want a man who's gonna walk around holding on the back of my neck like he owns me"
+
+**CONDITIONAL (15%)**: Start with "If..."
+- "If you [do X]..." / "If he [does X]..." / "If we ever..." / "If it slips..."
+- Corpus: "if you're giving me back shots and you aren't pulling my hair, what are we even doing?"
+
+**QUESTION (15%)**: Ask the viewer something
+- "Do you ever..." / "Have you ever..." / "Where are the guys who..." / "Why is it so..."
+- Corpus: "ladies do you ever get like soaked just from a man's voice"
+
+**SUPERLATIVE (10%)**: Best/hottest/nothing compares
+- "There is nothing hotter than..." / "The best kind of..." / "The fucking hottest thing..."
+- Corpus: "there is nothing fucking hotter than when a man is hittin' it so good"
+
+**PREFERENCE/LOVE (10%)**: What she loves
+- "I fucking love when..." / "I love a man who..." / "I think it is so hot when..."
+- Corpus: "i fucking love when men talk during sex"
+
+**DEFIANT (10%)**: Don't care, won't apologize
+- "I don't care what people say..." / "I don't give a fuck..." / "I am not a [X], but..."
+- Corpus: "I don't care what people say, okay? I want a man who's gonna..."
+
+**OBSERVATION (10%)**: Noticing something about men
+- "Every time I see..." / "When a man [does X]..." / "Guys who..." / "There's something about..."
+- Corpus: "Every time I see a man with some veiny forearms I can't help but picture..."
+
+**CONFESSION/TOXIC (10%)**: Admitting something
+- "My toxic trait is..." / "I'm not ashamed to admit..." / "I'm not gonna lie..."
+- Corpus: "My toxic trait is that I'll look you in the eyes, smile sweetly, and say you don't have to pull out"
+
+**ADVICE/TIP (3%)**: Teaching or sharing tips
+- "A little tip for..." / "If you want to make..." / "You want to know how to..."
+- Corpus: "you want to know how to drive him crazy when you're giving him"
+
+**DIRECT ADDRESS (2%)**: Speaking directly to a group
+- "Guys, you do not need to..." / "Ladies, if you..." / "Men who..."
+- Corpus: "Guys, you do not need to be embarrassed if you're lasting less than 15 minutes"
+
+### ❌ STRICTLY BANNED (Instant rejection):
+- "Okay so like..." - BANNED (filler word opener)
+- "So like..." - BANNED (filler word opener)
+- "Um..." - BANNED (filler word opener)  
+- "Like..." alone - BANNED (filler word opener)
+- "I..." alone (must be "I want/need/love/don't care") - BANNED (too generic)
+
+Her filler words (${fillerWords}) belong in SCRIPT BODY, NEVER in hooks. Hooks = punchy first words.
+
+### OPENER TRACKING REQUIREMENT:
+For ${count} hooks, you MUST use at minimum:
+- 2 different DESIRE/NEED openers
+- 2 different CONDITIONAL openers  
+- 2 different QUESTION openers
+- 2 different OBSERVATION openers
+- 1 SUPERLATIVE opener
+- 1 DEFIANT opener
+- 1 CONFESSION opener
+- Remaining from any category
+
+**NO OPENER REPETITION**: If you use "I want a man who..." for hook 1, you CANNOT use it again. Use "I need a man who..." or "I just want..." instead.
+
+## ⚠️ CRITICAL: TOPIC DIVERSITY (MANDATORY - WILL REJECT IF VIOLATED)
+
+You have ${count} hooks - you MUST cover at least ${Math.ceil(count / 2)} DIFFERENT topics.
+
+### TOPIC CATEGORIES (Rotate through these):
+
+**PHYSICAL ATTRACTION** (what body parts/features turn her on):
+- Forearms, hands, voice, jawline, shoulders, eyes, height
+- "veiny forearms", "big hands", "deep voice", "the way he smells"
+
+**BEDROOM DYNAMICS** (what happens during sex):
+- Positions, dirty talk, sounds, eye contact, control dynamics
+- "when he talks during", "pull my hair", "make me beg"
+
+**SPECIFIC SEX ACTS** (explicit activities):
+- Oral (giving/receiving), positions, backdoor, finishing
+- "worship his", "devour my", "back shots", "ride until"
+
+**RELATIONSHIP BEHAVIORS** (what he does outside bedroom):
+- Possessiveness, protectiveness, thoughtfulness, dominance
+- "hold the back of my neck", "grab my chin", "hand on thigh"
+
+**QUALIFYING MEN** (what type she wants):
+- Challenge hooks, standards, dealbreakers
+- "If you can't...", "Men who...", "The type of guy who..."
+
+**EMOTIONAL/VULNERABLE** (deeper connection):
+- Intimacy, trust, communication, safety
+- "when he makes me feel...", "I want someone who..."
+
+**RANDOM/UNIQUE** (her specific interests):
+- Gaming, gym, food, travel, hobbies, quirky scenarios
+- Use her brand anchors sparingly here
+
+### TOPIC DISTRIBUTION FOR ${count} HOOKS:
+${count >= 10 ? `- Physical attraction: 2-3 hooks
+- Bedroom dynamics: 2-3 hooks  
+- Specific sex acts: 2-3 hooks
+- Relationship behaviors: 2-3 hooks
+- Qualifying men: 1-2 hooks
+- Random/unique: 1-2 hooks` : `- Use at least ${Math.ceil(count / 2)} different topic categories`}
+
+### ❌ TOPIC REPETITION BAN:
+- NO location/place mentioned more than ONCE (Sedona, Paris, etc.)
+- NO specific body part in more than 2 hooks
+- NO same sex act described more than twice
+- NO same scenario repeated (e.g., "gaming" can only appear once)
+
+${brandAnchors.length > 0 ? `Brand anchors (${brandAnchors.join(', ')}): Use in MAX 1-2 hooks total, spread them out!` : ''}
+
+## 🚫 HOOKS THAT DON'T CONVERT (AVOID THESE)
+
+❌ PERSONAL STORYTIME HOOKS - These kill conversion!
+   BAD: "I drove to Sedona and..." / "This one time I..." / "Yesterday I went to..."
+   WHY BAD: Viewer can't insert themselves, they're just eavesdropping on her life
+   
+❌ Self-focused hooks that brag about HER (makes viewer feel inadequate)
+   BAD: "I performed at Carnegie Hall so your guitar skills don't impress me"
+   
+❌ Generic hooks any creator could say
+   BAD: "I love good music during sex"
+   
+❌ Hooks that talk AT women instead of TO men
+   BAD: "Ladies, do you ever feel like..." (unless her audience is women)
+
+❌ Hooks about HER achievements without viewer involvement
+   BAD: "I'm talented at X"
+
+❌ Travel/location-based hooks without viewer involvement
+   BAD: "When I was in Paris..." / "At this restaurant I went to..."
+   WHY BAD: Viewer can't be there, they're excluded from the fantasy 
+
+## ✅ HOOKS THAT CONVERT (USE THESE PATTERNS)
+
+✅ "If you're the type who [specific]... [fantasy invitation]"
+   GOOD: "If you grab my chin and call me good girl? You fucked up, I'm keeping you"
+
+✅ Make viewer imagine being DESIRED by her
+   GOOD: "I need a man who will [specific desire]"
+
+✅ Her unique differentiators + sexual tension
+   GOOD: "My fantasy is Taco Bell at 2am after we've been going at it all night"
+
+✅ Specific imagery from HER turn-ons
+   GOOD: "When he whispers 'that's my good girl' I literally cannot function"
+
+## EXPLICITNESS LEVEL: ${explicitnessLevel}
+
+${explicitnessLevel === 'full_send' ? `
+🔥 FULL SEND MODE: Be explicit, bold, and unapologetic.
+- Use her sexual vocabulary directly
+- Reference specific sex acts she's discussed
+- Don't censor or hedge
+- The corpus shows explicit hooks perform BEST for OF conversion
+- Examples: "I want to be used like...", "When he [explicit act]...", "My pink taco..."
+` : explicitnessLevel === 'medium' ? `
+⚡ MEDIUM MODE: Suggestive and flirty but not graphic.
+- Imply without stating directly
+- Use euphemisms and innuendo
+- Build tension through suggestion
+` : `
+💫 SUBTLE MODE: Flirty and teasing, clean language.
+- Focus on emotional connection
+- Romantic rather than sexual
+- Safe for most platforms
+`}
 
 ## HOOK QUALITY CHECKLIST (each hook must pass ALL)
 
@@ -434,14 +826,22 @@ Return a JSON array of hook objects:
 [
   {
     "hook": "The actual hook text",
-    "hook_type": "bold_statement|question|confession|challenge|relatable|fantasy|hot_take|storytime",
+    "hook_type": "bold_statement|question|confession|challenge|relatable|fantasy|hot_take|storytime|advice|thirst_commentary",
+    "opener_category": "desire|conditional|question|superlative|preference|defiant|observation|confession|advice|direct_address|storytime|philosophical",
+    "topic_category": "physical_attraction|bedroom_dynamics|sex_acts|relationship_behaviors|qualifying_men|emotional|random_unique",
     "parasocial_levers": ["lever1", "lever2"],
     "why_it_works": "One sentence on why this hook fits her voice and will stop scrolls"${enablePcmTracking ? `,
     "pcm_type": "harmonizer|thinker|rebel|persister|imaginer|promoter"` : ''}
   }
 ]
 
-Generate exactly ${count} hooks.`}
+DIVERSITY CHECK BEFORE SUBMITTING:
+1. Count your opener_category values - must have at least 6 different categories
+2. Count your topic_category values - must have at least 4 different categories  
+3. Read each hook's first 3 words - NO TWO hooks should start identically
+4. Check for any location/place names - each can only appear ONCE
+
+Generate exactly ${count} hooks with MAXIMUM diversity.`}
 ${enablePcmTracking ? `
 
 ## PCM DISTRIBUTION REQUIREMENT
@@ -460,4 +860,4 @@ Tag each hook with its primary PCM type based on the language used.
 Return ONLY the JSON, no markdown, no explanation.`
 }
 
-export { HOOK_TYPE_FRAMEWORKS, PARASOCIAL_LEVER_DESCRIPTIONS, PCM_HOOK_PATTERNS, VARIATION_STRATEGIES }
+export { HOOK_TYPE_FRAMEWORKS, PARASOCIAL_LEVER_DESCRIPTIONS, PCM_HOOK_PATTERNS, VARIATION_STRATEGIES, OPENER_PATTERNS }

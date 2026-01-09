@@ -3,6 +3,9 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { ToastContainer } from "@/components/ui";
 import "./globals.css";
 
+// Validate environment variables at startup (server-side only)
+import "@/lib/config";
+
 export const metadata: Metadata = {
   title: "Viral Scripts",
   description: "Viral script generation system for content creators",

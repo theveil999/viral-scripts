@@ -4,125 +4,21 @@
 import type { VoiceProfile } from '../supabase/types'
 import type { CorpusMatch } from '../services/corpus-retrieval'
 import type { GeneratedHook } from '../services/hook-generation'
+import {
+  type OrganicCTAType,
+  ORGANIC_CTA_TEMPLATES,
+  CTA_ANTI_PATTERNS,
+  buildCTAGuidance,
+  getRecommendedCTAs,
+} from './organic-cta'
+
+// Re-export OrganicCtaType with the naming convention used in this file
+export type OrganicCtaType = OrganicCTAType
 
 export type TargetDuration = 'short' | 'medium' | 'long'
 
-// Organic CTA types - non-salesy closers that build cult following
-export type OrganicCtaType = 
-  | 'fantasy_invitation'   // "If you're [qualifier]... [desire]"
-  | 'keeper_signal'        // "That's [high value label]"
-  | 'consequence_lock'     // "you fucked up, okay? Because now..."
-  | 'rhetorical_close'     // "Am I asking for too much?"
-  | 'outcome_promise'      // "I'm telling you, [result]"
-  | 'qualifier_challenge'  // "If you're not [doing X]..."
-  | 'emotional_bond'       // Simple connection: "now follow me i miss you"
-  | 'none'                 // Let script end naturally
-
-// Corpus-derived CTA patterns that feel natural, NOT promotional
-const ORGANIC_CTA_PATTERNS: Record<OrganicCtaType, {
-  description: string
-  pattern: string
-  corpus_examples: string[]
-  anti_patterns: string[] // What to AVOID
-}> = {
-  fantasy_invitation: {
-    description: 'Makes viewer feel chosen/selected by qualifying them',
-    pattern: 'If you\'re [specific type]... [I need you / I\'ve been searching / hit me up]',
-    corpus_examples: [
-      'if you find one, don\'t let him go',
-      'if you\'re that type of guy... hit me up',
-      'if you drive one of these... I need you',
-    ],
-    anti_patterns: ['follow for more', 'link in bio', 'check out my'],
-  },
-  keeper_signal: {
-    description: 'Labels the ideal viewer as high-value marriage material',
-    pattern: 'That\'s [marriage material / a keeper / wifey material]',
-    corpus_examples: [
-      'That\'s marriage material right there.',
-      'That\'s a keeper.',
-      'Marry that man.',
-    ],
-    anti_patterns: ['subscribe to', 'see more on'],
-  },
-  consequence_lock: {
-    description: 'Playful possessiveness - "now you\'re stuck with me"',
-    pattern: 'you fucked up, okay? Because now [possessive consequence]',
-    corpus_examples: [
-      'Cause now I\'m never letting you go.',
-      'Till death do us part, motherfucker.',
-      'You\'re not going anywhere.',
-    ],
-    anti_patterns: ['don\'t forget to'],
-  },
-  rhetorical_close: {
-    description: 'Ends with question that validates the content',
-    pattern: 'Am I asking for too much? / Is that so hard?',
-    corpus_examples: [
-      'Am I asking for too much here?',
-      'Is that so hard?',
-      'I feel like I\'m not asking for much.',
-    ],
-    anti_patterns: ['let me know in comments'],
-  },
-  outcome_promise: {
-    description: 'Promises the result if viewer does what she described',
-    pattern: 'I\'m telling you, [result] / I promise you, [outcome]',
-    corpus_examples: [
-      'I\'m telling you, it drives them fucking crazy.',
-      'I promise you, that man will never feel so appreciated.',
-      'Trust me, he\'s not lasting.',
-    ],
-    anti_patterns: ['click the link'],
-  },
-  qualifier_challenge: {
-    description: 'Challenges viewer to step up or miss out',
-    pattern: 'If you\'re not [doing X]... you\'re holding yourself back',
-    corpus_examples: [
-      'you\'re holding yourself back from your true potential.',
-      'you\'re not doing it right.',
-      'you don\'t actually like them.',
-    ],
-    anti_patterns: ['swipe up'],
-  },
-  emotional_bond: {
-    description: 'Simple, direct emotional connection',
-    pattern: 'now follow me i miss you / I need that in my life',
-    corpus_examples: [
-      'now follow me i miss you',
-      'I need that.',
-      'That\'s all I want.',
-    ],
-    anti_patterns: ['make sure to follow'],
-  },
-  none: {
-    description: 'Let the script end naturally without explicit CTA',
-    pattern: 'End on punchline or natural conclusion',
-    corpus_examples: [
-      'It\'s the only way to do it.',
-      'That\'s how I like it.',
-      'I don\'t make the rules.',
-    ],
-    anti_patterns: ['all promotional language'],
-  },
-}
-
-// ANTI-PATTERNS: CTAs that sound salesy and should NEVER be used
-const CTA_ANTI_PATTERNS = [
-  'Link in bio',
-  'Follow for more',
-  'Subscribe to my',
-  'Check out my',
-  'Click the link',
-  'Swipe up',
-  'See more on',
-  'Don\'t forget to follow',
-  'Make sure to like',
-  'Comment below',
-  'Let me know in the comments',
-  'Share this with',
-  'Tag a friend',
-]
+// Re-export CTA constants for backward compatibility
+const ORGANIC_CTA_PATTERNS = ORGANIC_CTA_TEMPLATES
 
 export interface ScriptExpansionParams {
   modelName: string
@@ -242,6 +138,15 @@ ${signatureSpicyPhrases.length > 0 ? signatureSpicyPhrases.map(p => `- "${p}"`).
     .map((quote, i) => `${i + 1}. "${quote}"`)
     .join('\n') || 'No samples available'
 
+  // Extract brand anchors (CRITICAL for unique content)
+  const content = voiceProfile.content as Record<string, unknown>
+  const brandAnchors = (content?.brand_anchors as string[]) || []
+  
+  // Extract turn-ons for fantasy content
+  const turnOns = (spicy?.turn_ons_discussed as string[]) || []
+  const herType = (spicy?.her_type as string) || ''
+  const bedroomDynamic = (spicy?.bedroom_dynamic as string) || ''
+
   const boundaries = voiceProfile.boundaries as Record<string, unknown>
   const hardNos = (boundaries?.hard_nos as string[])?.join(', ') || 'none specified'
   const topicsToAvoid = (boundaries?.topics_to_avoid as string[])?.join(', ') || 'none specified'
@@ -316,7 +221,24 @@ ${parasocialAvoidSection}
 
 Sample Speech (MATCH THIS EXACT VOICE):
 ${sampleSpeech}
+${brandAnchors.length > 0 ? `
+## 🏷️ BRAND ANCHORS (Her unique differentiators - USE THESE)
 
+${brandAnchors.map(b => `- ${b}`).join('\n')}
+
+These are things ONLY ${modelName} can talk about. Weave them into scripts naturally.
+Example: If she's obsessed with Taco Bell, a script could involve Taco Bell in a fantasy scenario.
+This makes content unique and impossible for other creators to copy.
+` : ''}
+${turnOns.length > 0 ? `
+## 🔥 HER TURN-ONS (Use for specific, vivid imagery)
+
+${turnOns.map(t => `- ${t}`).join('\n')}
+${herType ? `Her type: ${herType}` : ''}
+${bedroomDynamic ? `Bedroom dynamic: ${bedroomDynamic}` : ''}
+
+Scripts should reference these SPECIFIC turn-ons, not generic desires.
+` : ''}
 ## SCRIPT STRUCTURE FRAMEWORK
 
 Every script follows this arc:
@@ -378,16 +300,109 @@ Sentence count: ${duration.sentences} sentences
    - Exclusivity: Make viewer feel like they're getting insider access
    - Vulnerability: Share real feelings, not performed ones
 
-5. BE SPECIFIC, NOT GENERIC
-   - BAD: "when a guy does something hot"
-   - GOOD: "when he grabs my chin and makes me look at him"
-   - Specific imagery = viral, generic statements = forgettable
+5. BE SPECIFIC WITH VIVID CORPUS-STYLE IMAGERY
+   
+   ❌ GENERIC (kills virality):
+   - "when a guy does something hot"
+   - "getting railed" / "going at it"
+   - "making love" / "being intimate"
+   
+   ✅ SPECIFIC (what goes viral - from corpus):
+   - "drool all over it, letting it trail from tongue to your..."
+   - "wear my pink taco like a glove"
+   - "slap my cheeks so hard it echoes into the hallway"
+   - "grab my hair and use my mouth like I'm his personal doll"
+   - "make me waterfall all over his face"
+   - "bounce on it like a pogo stick until his toes curl"
+   
+   Study how corpus examples describe:
+   - Specific body sensations (textures, temperatures, pressure)
+   - Visual details (what it looks like, positions)
+   - Sounds (moans, wet sounds, slapping)
+   - Physical reactions (trembling, gripping, arching)
 
-6. EXPLICITNESS MATCH
-   - Match her level: ${explicitnessLevel}
-   - If full_send: don't censor, be bold
-   - If medium: suggestive but not explicit
-   - If subtle: keep it clean but flirty
+6. EXPLICITNESS MATCH: ${explicitnessLevel}
+   ${explicitnessLevel === 'full_send' ? `
+   🔥 FULL SEND MODE - Match corpus explicitness:
+   
+   WHAT THE CORPUS DOES (100k+ views):
+   - Names specific body parts with euphemisms ("pink taco", "back door", "the boys")
+   - Describes specific sex acts in detail ("butter churning", "DJ scratching", "back shots")
+   - Uses vivid sensory language ("sopping", "throbbing", "dripping", "glistening")
+   - Includes physical reactions ("shaking", "trembling", "toes curling", "eyes rolling back")
+   - References positions and scenarios explicitly
+   
+   EXAMPLES FROM CORPUS:
+   - "i want you to wear my pink taco like a glove"
+   - "let me bounce on it until you're shooting blanks"
+   - "grab my hair and pull me back while you're hitting it from behind and say 'beg for it'"
+   - "when he comes up from eating and his face is glistening with my snail trail"
+   
+   YOUR SCRIPTS MUST have this level of vivid, specific sexual imagery.
+   No vague "getting intimate" - be as explicit as the corpus.
+   ` : explicitnessLevel === 'medium' ? `
+   ⚡ MEDIUM MODE - Suggestive and teasing:
+   - Use innuendo and euphemisms  
+   - Build sexual tension without being graphic
+   - Leave some things to imagination
+   ` : `
+   💫 SUBTLE MODE - Flirty and romantic:
+   - Focus on emotional connection
+   - Implied rather than stated
+   - Safe for all platforms
+   `}
+
+## 🎯 VIRAL CONVERSION PATTERNS (MUST USE IN EVERY SCRIPT)
+
+**THE VIEWER MUST FEEL CHOSEN, NOT SOLD TO**
+
+1. **FANTASY INVITATION** - Qualify the viewer as special
+   - "If you're the type who [specific behavior]... [consequence]"
+   - "If you do this without being asked... marry me right now"
+   - Makes viewer imagine being the person she's describing
+
+2. **CONSEQUENCE LOCK** - Possessive closers that create attachment
+   - "You fucked up, okay? Because now I'm never letting you go"
+   - "Till death do us part, motherfucker"
+   - Creates parasocial bond
+
+3. **SPECIFIC DESIRE** - Her actual turn-ons, not generic statements
+   - Reference her stated turn-ons from voice profile
+   - Use her vocabulary for body parts and acts
+   - "When he grabs my chin and whispers 'good girl'" not "when he's dominant"
+
+4. **RHETORICAL CLOSE** - Invites agreement without asking
+   - "Am I asking for too much here?"
+   - "Is that so hard?"
+
+## 🚫 SCRIPTS THAT DON'T CONVERT (AVOID THESE PATTERNS)
+
+❌ **PERSONAL STORYTIME** - This is the #1 killer
+   BAD: "So I went to Sedona and..." / "Yesterday I was at the mall..."
+   WHY: Viewer can't insert themselves, they're just eavesdropping
+   
+❌ **LOCATION/TRAVEL STORIES** without viewer involvement
+   BAD: "When I was in Paris..." / "I drove to the beach..."
+   WHY: Viewer isn't there, they're excluded from the fantasy
+
+❌ Scripts about HER being impressive (makes viewer feel inadequate)
+❌ Generic relationship advice that could be anyone
+❌ Content that sounds like girlfriends talking to each other
+❌ Scripts that focus on her talents/achievements without viewer involvement
+❌ Vague, non-specific content with no vivid imagery
+
+## ✅ WHAT CONVERTS: VIEWER-QUALIFYING SCRIPTS
+
+The script should make the viewer feel like:
+- "She's talking about ME"
+- "I could be that guy she wants"
+- "She would want ME if she knew me"
+
+**Transform any hook into this structure:**
+1. [What she wants/needs in a man] - qualifies viewer
+2. [Specific behavior/trait she finds irresistible] - viewer imagines being that
+3. [What she would do / how she would react] - the fantasy/reward
+4. [Organic closer that creates attachment]
 
 ## BOUNDARIES (DO NOT INCLUDE)
 

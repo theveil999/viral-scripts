@@ -19,7 +19,9 @@ import {
   Loader2,
   CheckCircle2,
   ExternalLink,
+  Trash2,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Model } from "@/lib/supabase/types";
 import {
@@ -35,10 +37,12 @@ import {
 
 export default function ModelDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const id = params.id as string;
   const [model, setModel] = useState<Model | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Generate scripts modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -57,6 +61,13 @@ export default function ModelDetailPage() {
       passedValidation: number;
       avgVoiceFidelity: number;
     };
+    scripts?: Array<{
+      content: string;
+      hook: string;
+      hookType: string;
+      voiceFidelityScore: number;
+    }>;
+    savedToDb?: boolean;
   } | null>(null);
 
   const handleGenerateScripts = async () => {
@@ -89,6 +100,8 @@ export default function ModelDetailPage() {
         setGenerateResult({
           success: true,
           stats: data.stats,
+          scripts: data.scripts,
+          savedToDb: data.savedToDb,
         });
       }
     } catch (err) {
@@ -106,6 +119,29 @@ export default function ModelDetailPage() {
       setIsModalOpen(false);
       setGenerateResult(null);
       setFormData({ topic: "", hookType: "", count: 3, saveToDb: true });
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!model) return;
+    const displayName = model.stage_name || model.name;
+    
+    if (!confirm(`Delete "${displayName}"? This will also delete all their scripts and cannot be undone.`)) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/models/${model.id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to delete');
+      }
+      // Redirect back to creators list
+      router.push('/models');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to delete creator');
+      setIsDeleting(false);
     }
   };
 
@@ -194,10 +230,24 @@ export default function ModelDetailPage() {
               )}
             </div>
           </div>
-          <Button variant="primary" onClick={() => setIsModalOpen(true)}>
-            <Sparkles className="w-4 h-4" />
-            Generate Scripts
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="primary" onClick={() => setIsModalOpen(true)}>
+              <Sparkles className="w-4 h-4" />
+              Generate Scripts
+            </Button>
+            <Button 
+              variant="danger" 
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Trash2 className="w-4 h-4" />
+              )}
+              Delete
+            </Button>
+          </div>
         </div>
 
         {/* Quick Stats Bar */}
@@ -449,7 +499,7 @@ export default function ModelDetailPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="relative w-full max-w-md mx-4 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl"
+            className="relative w-full max-w-2xl mx-4 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl max-h-[90vh] flex flex-col"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-zinc-800">
@@ -519,10 +569,13 @@ export default function ModelDetailPage() {
                       disabled={isGenerating}
                       className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 disabled:opacity-50"
                     >
-                      <option value={1}>1 script</option>
-                      <option value={2}>2 scripts</option>
-                      <option value={3}>3 scripts</option>
+                      <option value={3}>3 scripts (quick test)</option>
                       <option value={5}>5 scripts</option>
+                      <option value={10}>10 scripts</option>
+                      <option value={15}>15 scripts</option>
+                      <option value={20}>20 scripts</option>
+                      <option value={25}>25 scripts (batch filming)</option>
+                      <option value={30}>30 scripts (max)</option>
                     </select>
                   </div>
 
@@ -543,30 +596,83 @@ export default function ModelDetailPage() {
                 </>
               ) : generateResult.success ? (
                 /* Success State */
-                <div className="text-center py-4">
-                  <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
-                    <CheckCircle2 className="w-6 h-6 text-emerald-400" />
+                <div className="py-4">
+                  <div className="text-center mb-4">
+                    <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
+                      <CheckCircle2 className="w-6 h-6 text-emerald-400" />
+                    </div>
+                    <h3 className="text-lg font-medium text-zinc-100 mb-2">
+                      Scripts Generated!
+                    </h3>
+                    <div className="space-y-1 text-sm text-zinc-400 mb-4">
+                      <p>Total: {generateResult.stats?.totalGenerated || generateResult.scripts?.length || 0} scripts</p>
+                      <p>Passed validation: {generateResult.stats?.passedValidation || generateResult.scripts?.length || 0}</p>
+                      <p>
+                        Avg voice fidelity:{" "}
+                        <span className={generateResult.stats?.avgVoiceFidelity && generateResult.stats.avgVoiceFidelity >= 0.8 ? "text-emerald-400" : "text-yellow-400"}>
+                          {Math.round((generateResult.stats?.avgVoiceFidelity || 0) * 100)}%
+                        </span>
+                      </p>
+                    </div>
                   </div>
-                  <h3 className="text-lg font-medium text-zinc-100 mb-2">
-                    Scripts Generated!
-                  </h3>
-                  <div className="space-y-1 text-sm text-zinc-400 mb-4">
-                    <p>Total: {generateResult.stats?.totalGenerated} scripts</p>
-                    <p>Passed validation: {generateResult.stats?.passedValidation}</p>
-                    <p>
-                      Avg voice fidelity:{" "}
-                      <span className={generateResult.stats?.avgVoiceFidelity && generateResult.stats.avgVoiceFidelity >= 0.8 ? "text-emerald-400" : "text-yellow-400"}>
-                        {Math.round((generateResult.stats?.avgVoiceFidelity || 0) * 100)}%
-                      </span>
-                    </p>
-                  </div>
-                  <Link
-                    href="/scripts"
-                    className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 text-sm"
-                  >
-                    View Scripts
-                    <ExternalLink className="w-4 h-4" />
-                  </Link>
+                  
+                  {/* Show scripts inline if not saved to DB */}
+                  {!generateResult.savedToDb && generateResult.scripts && generateResult.scripts.length > 0 && (
+                    <div className="mt-4">
+                      <div className="flex justify-between items-center mb-3">
+                        <p className="text-xs text-amber-500">
+                          ⚠️ Scripts not saved - copy them now!
+                        </p>
+                        <button
+                          onClick={() => {
+                            const allScripts = generateResult.scripts?.map((s, i) => 
+                              `=== SCRIPT ${i + 1} (${s.hookType}) ===\n${s.content}`
+                            ).join('\n\n');
+                            navigator.clipboard.writeText(allScripts || '');
+                          }}
+                          className="text-xs text-purple-400 hover:text-purple-300 transition-colors"
+                        >
+                          📋 Copy All Scripts
+                        </button>
+                      </div>
+                      <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-2">
+                        {generateResult.scripts.map((script, i) => (
+                          <div key={i} className="p-3 bg-zinc-800/50 rounded-lg border border-zinc-700">
+                            <div className="flex justify-between items-start mb-2">
+                              <span className="text-xs text-purple-400 font-medium">
+                                {script.hookType || 'Script'} #{i + 1}
+                              </span>
+                              <span className="text-xs text-zinc-500">
+                                {Math.round((script.voiceFidelityScore || 0) * 100)}% fidelity
+                              </span>
+                            </div>
+                            <p className="text-sm text-zinc-300 whitespace-pre-wrap">
+                              {script.content}
+                            </p>
+                            <button
+                              onClick={() => navigator.clipboard.writeText(script.content)}
+                              className="mt-2 text-xs text-zinc-500 hover:text-purple-400 transition-colors"
+                            >
+                              📋 Copy
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Link to scripts page if saved */}
+                  {generateResult.savedToDb && (
+                    <div className="text-center">
+                      <Link
+                        href="/scripts"
+                        className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 text-sm"
+                      >
+                        View Scripts
+                        <ExternalLink className="w-4 h-4" />
+                      </Link>
+                    </div>
+                  )}
                 </div>
               ) : (
                 /* Error State */
