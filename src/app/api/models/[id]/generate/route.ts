@@ -4,31 +4,35 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { runPipeline } from '@/lib/services/script-pipeline'
-import type { TargetDuration } from '@/lib/prompts/script-expansion'
-
-interface GenerateScriptsRequest {
-  hookCount?: number
-  targetDuration?: TargetDuration
-  minFidelityScore?: number
-  autoRevise?: boolean
-  saveToDatabase?: boolean
-}
+import { generatePipelineSchema, validateRequest } from '@/lib/validations'
+import { requireAuth } from '@/lib/auth/middleware'
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params
-    const body = (await request.json()) as GenerateScriptsRequest
+    // Auth check
+    const authResult = await requireAuth(request)
+    if (authResult instanceof NextResponse) {
+      return authResult
+    }
 
-    // Run the full pipeline
-    const result = await runPipeline(id, {
-      hookCount: body.hookCount,
-      targetDuration: body.targetDuration,
-      minFidelityScore: body.minFidelityScore,
-      autoRevise: body.autoRevise,
-    })
+    const { id } = await params
+    
+    // Validate request body (all fields optional for pipeline)
+    const body = await request.json().catch(() => ({}))
+    const validation = validateRequest(generatePipelineSchema, body)
+    
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: validation.error, details: validation.details },
+        { status: 400 }
+      )
+    }
+
+    // Run the full pipeline (cast to match service types)
+    const result = await runPipeline(id, validation.data as Parameters<typeof runPipeline>[1])
 
     return NextResponse.json({
       scripts: result.scripts,

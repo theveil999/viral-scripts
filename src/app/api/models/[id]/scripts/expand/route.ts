@@ -5,32 +5,39 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { expandScripts } from '@/lib/services/script-expansion'
 import type { GeneratedHook } from '@/lib/services/hook-generation'
-import type { TargetDuration } from '@/lib/prompts/script-expansion'
-
-interface ExpandScriptsRequest {
-  hooks: GeneratedHook[]
-  targetDuration?: TargetDuration
-  corpusLimit?: number
-}
+import { expandScriptsSchema, validateRequest } from '@/lib/validations'
+import { requireAuth } from '@/lib/auth/middleware'
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params
-    const body = (await request.json()) as ExpandScriptsRequest
+    // Auth check
+    const authResult = await requireAuth(request)
+    if (authResult instanceof NextResponse) {
+      return authResult
+    }
 
-    if (!body.hooks || !Array.isArray(body.hooks) || body.hooks.length === 0) {
+    const { id } = await params
+    
+    // Validate request body
+    const body = await request.json()
+    const validation = validateRequest(expandScriptsSchema, body)
+    
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'hooks array is required and must not be empty' },
+        { error: validation.error, details: validation.details },
         { status: 400 }
       )
     }
 
-    const result = await expandScripts(id, body.hooks, {
-      targetDuration: body.targetDuration,
-      corpusLimit: body.corpusLimit,
+    const { hooks, targetDuration, corpusLimit } = validation.data
+
+    // Cast hooks to match service type (validation ensures required fields)
+    const result = await expandScripts(id, hooks as GeneratedHook[], {
+      targetDuration,
+      corpusLimit,
     })
 
     return NextResponse.json({

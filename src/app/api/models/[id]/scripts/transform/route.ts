@@ -5,32 +5,35 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { transformVoice } from '@/lib/services/voice-transformation'
 import type { ExpandedScript } from '@/lib/services/script-expansion'
-
-interface TransformScriptsRequest {
-  scripts: ExpandedScript[]
-  batchSize?: number
-  temperature?: number
-}
+import { transformScriptsSchema, validateRequest } from '@/lib/validations'
+import { requireAuth } from '@/lib/auth/middleware'
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params
-    const body = (await request.json()) as TransformScriptsRequest
+    // Auth check
+    const authResult = await requireAuth(request)
+    if (authResult instanceof NextResponse) {
+      return authResult
+    }
 
-    if (!body.scripts || !Array.isArray(body.scripts) || body.scripts.length === 0) {
+    const { id } = await params
+    
+    // Validate request body
+    const body = await request.json()
+    const validation = validateRequest(transformScriptsSchema, body)
+    
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'scripts array is required and must not be empty' },
+        { error: validation.error, details: validation.details },
         { status: 400 }
       )
     }
 
-    const result = await transformVoice(id, body.scripts, {
-      batchSize: body.batchSize,
-      temperature: body.temperature,
-    })
+    // Cast scripts to match service type (validation ensures required fields)
+    const result = await transformVoice(id, validation.data.scripts as ExpandedScript[])
 
     return NextResponse.json({
       transformed_scripts: result.transformed_scripts,

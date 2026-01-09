@@ -5,41 +5,32 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { extractVoiceProfile } from '@/lib/services/profile-extraction'
-
-interface ExtractProfileRequest {
-  transcript: string
-  name: string
-  stage_name?: string
-}
+import { extractProfileSchema, validateRequest } from '@/lib/validations'
+import { requireAuth } from '@/lib/auth/middleware'
 
 export async function POST(request: NextRequest) {
   try {
-    const body = (await request.json()) as ExtractProfileRequest
+    // Auth check
+    const authResult = await requireAuth(request)
+    if (authResult instanceof NextResponse) {
+      return authResult
+    }
 
-    // Validate request
-    if (!body.transcript || typeof body.transcript !== 'string') {
+    // Validate request body
+    const body = await request.json()
+    const validation = validateRequest(extractProfileSchema, body)
+
+    if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: 'transcript is required' },
+        { success: false, error: validation.error, details: validation.details },
         { status: 400 }
       )
     }
 
-    if (!body.name || typeof body.name !== 'string') {
-      return NextResponse.json(
-        { success: false, error: 'name is required' },
-        { status: 400 }
-      )
-    }
-
-    if (body.transcript.trim().length < 100) {
-      return NextResponse.json(
-        { success: false, error: 'transcript must be at least 100 characters' },
-        { status: 400 }
-      )
-    }
+    const { transcript, name } = validation.data
 
     // Extract voice profile using Claude
-    const voiceProfile = await extractVoiceProfile(body.transcript)
+    const voiceProfile = await extractVoiceProfile(transcript)
 
     // Insert into database
     const supabase = createAdminClient()
@@ -54,13 +45,13 @@ export async function POST(request: NextRequest) {
     const { data: model, error: insertError } = await (supabase
       .from('models') as any)
       .insert({
-        name: body.name,
-        stage_name: body.stage_name || null,
-        transcript_raw: body.transcript,
+        name,
+        transcript_raw: transcript,
         voice_profile: voiceProfile,
         archetype_tags: archetypeTags,
         explicitness_level: voiceProfile.spicy?.explicitness_level || null,
         boundaries: voiceProfile.boundaries || null,
+        // user_id: authResult.id, // TODO: Uncomment when user_id column exists
       })
       .select('id')
       .single()
