@@ -4,20 +4,40 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireAuth } from '@/lib/auth/middleware'
+import { getScriptsQuerySchema, updateScriptsStatusSchema, validateRequest } from '@/lib/validations'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Auth check
+    const authResult = await requireAuth(request)
+    if (authResult instanceof NextResponse) {
+      return authResult
+    }
+
     const { id } = await params
     const searchParams = request.nextUrl.searchParams
 
-    // Parse query params
-    const status = searchParams.get('status')
-    const batchId = searchParams.get('batch_id')
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100)
-    const offset = parseInt(searchParams.get('offset') || '0', 10)
+    // Validate query params
+    const queryValidation = validateRequest(getScriptsQuerySchema, {
+      page: searchParams.get('page') || '1',
+      limit: searchParams.get('limit') || '50',
+      status: searchParams.get('status') || undefined,
+      batch_id: searchParams.get('batch_id') || undefined,
+    })
+
+    if (!queryValidation.success) {
+      return NextResponse.json(
+        { error: queryValidation.error },
+        { status: 400 }
+      )
+    }
+
+    const { page, limit, status, batch_id } = queryValidation.data
+    const offset = (page - 1) * limit
 
     const supabase = createAdminClient()
 
@@ -33,8 +53,8 @@ export async function GET(
       query = query.eq('status', status)
     }
 
-    if (batchId) {
-      query = query.eq('batch_id', batchId)
+    if (batch_id) {
+      query = query.eq('batch_id', batch_id)
     }
 
     // Apply pagination
@@ -53,8 +73,8 @@ export async function GET(
       scripts: data || [],
       total,
       hasMore,
+      page,
       limit,
-      offset,
     })
   } catch (error) {
     console.error('Scripts list error:', error)
@@ -71,27 +91,26 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Auth check
+    const authResult = await requireAuth(request)
+    if (authResult instanceof NextResponse) {
+      return authResult
+    }
+
     const { id } = await params
+    
+    // Validate request body
     const body = await request.json()
+    const validation = validateRequest(updateScriptsStatusSchema, body)
 
-    const { script_ids, status } = body as {
-      script_ids: string[]
-      status: 'generated' | 'approved' | 'posted' | 'archived'
-    }
-
-    if (!script_ids || !Array.isArray(script_ids) || script_ids.length === 0) {
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'script_ids array is required' },
+        { error: validation.error, details: validation.details },
         { status: 400 }
       )
     }
 
-    if (!['generated', 'approved', 'posted', 'archived'].includes(status)) {
-      return NextResponse.json(
-        { error: 'Invalid status. Must be: generated, approved, posted, or archived' },
-        { status: 400 }
-      )
-    }
+    const { script_ids, status } = validation.data
 
     const supabase = createAdminClient()
 
@@ -100,8 +119,6 @@ export async function PATCH(
 
     if (status === 'approved') {
       updateData.approved_at = new Date().toISOString()
-    } else if (status === 'posted') {
-      updateData.posted_at = new Date().toISOString()
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -6,6 +6,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { toDbVoiceProfile, ExtractedVoiceProfile } from "@/lib/services/profile-extraction";
 import { generateEmbedding, buildVoiceFingerprint } from "@/lib/services/embeddings";
+import { requireAuth, optionalAuth } from "@/lib/auth/middleware";
+import { z } from "zod";
+import { validateRequest } from "@/lib/validations";
+
+// Validation schema for creating a model
+const createModelSchema = z.object({
+  name: z.string().optional(),
+  stage_name: z.string().optional(),
+  transcript: z.string().optional(),
+  voice_profile: z.record(z.string(), z.unknown()),
+  archetype_tags: z.array(z.string()).optional(),
+}).refine(
+  (data) => data.name || data.stage_name,
+  { message: "Name or stage name is required" }
+);
 
 /**
  * POST /api/models
@@ -13,51 +28,55 @@ import { generateEmbedding, buildVoiceFingerprint } from "@/lib/services/embeddi
  */
 export async function POST(request: NextRequest) {
   try {
+    // Auth check
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+
+    // Validate request body
     const body = await request.json();
+    const validation = validateRequest(createModelSchema, body);
+    
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: validation.error, details: validation.details },
+        { status: 400 }
+      );
+    }
+
     const {
       name,
       stage_name,
       transcript,
       voice_profile,
       archetype_tags,
-    } = body;
-
-    if (!name && !stage_name) {
-      return NextResponse.json(
-        { error: "Name or stage name is required" },
-        { status: 400 }
-      );
-    }
-
-    if (!voice_profile) {
-      return NextResponse.json(
-        { error: "Voice profile is required" },
-        { status: 400 }
-      );
-    }
+    } = validation.data;
 
     const supabase = createAdminClient();
 
     // Use provided archetype_tags or derive from profile
+    const vp = voice_profile as unknown as ExtractedVoiceProfile;
     const finalArchetypeTags = archetype_tags || [
-      voice_profile.archetype_assignment?.primary,
-      voice_profile.archetype_assignment?.secondary,
+      vp.archetype_assignment?.primary,
+      vp.archetype_assignment?.secondary,
     ].filter(Boolean);
 
     // Transform profile for DB storage
-    const dbVoiceProfile = toDbVoiceProfile(voice_profile as ExtractedVoiceProfile);
+    const dbVoiceProfile = toDbVoiceProfile(vp);
 
     const modelData = {
-      name: name || voice_profile.identity?.name || "Unknown",
-      stage_name: stage_name || voice_profile.identity?.stage_name || null,
+      name: name || vp.identity?.name || "Unknown",
+      stage_name: stage_name || vp.identity?.stage_name || null,
       transcript_raw: transcript || null,
-      transcript_summary: voice_profile.identity?.quick_bio || null,
+      transcript_summary: vp.identity?.quick_bio || null,
       voice_profile: dbVoiceProfile,
       archetype_tags: finalArchetypeTags,
-      niche_tags: voice_profile.content?.niche_topics || [],
-      boundaries: voice_profile.boundaries || null,
-      explicitness_level: voice_profile.spicy?.explicitness_level || null,
+      niche_tags: vp.content?.niche_topics || [],
+      boundaries: vp.boundaries || null,
+      explicitness_level: vp.spicy?.explicitness_level || null,
       embedding: null,
+      // user_id: authResult.id, // TODO: Uncomment when user_id column exists
     };
 
     const { data, error } = await supabase
@@ -119,16 +138,20 @@ export async function POST(request: NextRequest) {
 
 /**
  * GET /api/models
- * List all models.
+ * List all models. Auth optional for read.
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    // Optional auth for listing (could filter by user later)
+    await optionalAuth(request);
+    
     const supabase = createAdminClient();
 
     const { data, error } = await supabase
       .from("models")
       .select("id, name, stage_name, archetype_tags, explicitness_level, created_at")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(100); // Add pagination limit
 
     if (error) {
       return NextResponse.json(
