@@ -1,6 +1,5 @@
 /**
- * @fileoverview hook-generation prompt template
- * @module lib/prompts/hook-generation
+ * @file Hook generation prompt builder
  */
 import type { VoiceProfile } from '../supabase/types'
 import type { CorpusMatch } from '../services/corpus-retrieval'
@@ -223,8 +222,7 @@ Act Terms SHE Uses:
 - Masturbation: ${actEuphemisms?.masturbation?.join(', ') || 'not specified'}
 
 Her Signature Spicy Phrases:
-${signatureSpicyPhrases.length > 0 ? signatureSpicyPhrases.map(p => `- "${p}"`).join('
-') : '- None identified yet'}
+${signatureSpicyPhrases.length > 0 ? signatureSpicyPhrases.map(p => `- "${p}"`).join('\n') : '- None identified yet'}
 
 **CRITICAL**: Use HER terms, not generic/corpus terms. If she says "kitty", don't write "pink taco". If she says "going down", don't write "munching". Her voice = her vocabulary.
 ` : ''
@@ -248,19 +246,16 @@ ${signatureSpicyPhrases.length > 0 ? signatureSpicyPhrases.map(p => `- "${p}"`).
   
   const parasocialSection = parasocialStrengths
     .map((lever: string) => `- ${lever.replace(/_/g, ' ')}: ${PARASOCIAL_LEVER_DESCRIPTIONS[lever] || 'Engage authentically'}`)
-    .join('
-')
+    .join('\n')
 
   const parasocialAvoidSection = parasocialAvoid.length > 0
-    ? parasocialAvoid.map((lever: string) => `- ${lever.replace(/_/g, ' ')}`).join('
-')
+    ? parasocialAvoid.map((lever: string) => `- ${lever.replace(/_/g, ' ')}`).join('\n')
     : '- None specified'
 
   const sampleSpeech = voiceProfile.sample_speech
     ?.slice(0, 5)
     .map((quote, i) => `${i + 1}. "${quote}"`)
-    .join('
-') || 'No samples available'
+    .join('\n') || 'No samples available'
 
   const boundaries = voiceProfile.boundaries as Record<string, unknown>
   const hardNos = (boundaries?.hard_nos as string[])?.join(', ') || 'none specified'
@@ -277,16 +272,13 @@ ${signatureSpicyPhrases.length > 0 ? signatureSpicyPhrases.map(p => `- "${p}"`).
    Pattern: ${analyzeCorpusHook(match)}
    Levers: ${match.parasocial_levers?.join(', ') || 'general'}`
     })
-    .join('
-
-')
+    .join('\n\n')
 
   // Build hook type distribution
   const hooksPerType = Math.ceil(count / hookTypes.length)
   const typeDistribution = hookTypes
     .map((type) => `- ${type}: ${hooksPerType} hooks`)
-    .join('
-')
+    .join('\n')
 
   // Build hook frameworks section
   const frameworksSection = hookTypes
@@ -298,14 +290,11 @@ ${signatureSpicyPhrases.length > 0 ? signatureSpicyPhrases.map(p => `- "${p}"`).
    Pattern: "${fw.pattern}"
    Example: "${fw.example}"`
     })
-    .join('
-
-')
+    .join('\n\n')
 
   // Recent hooks to avoid
   const recentHooksSection = recentHooks?.length
-    ? recentHooks.map((h) => `- "${h}"`).join('
-')
+    ? recentHooks.map((h) => `- "${h}"`).join('\n')
     : 'None - this is the first batch'
 
   // Build audience targeting section (CRITICAL for correct content direction)

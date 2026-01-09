@@ -1,6 +1,5 @@
 /**
- * @fileoverview voice-transformation prompt template
- * @module lib/prompts/voice-transformation
+ * @file Voice transformation prompt builder
  */
 import type { VoiceProfile } from '../supabase/types'
 import type { ExpandedScript } from '../services/script-expansion'
@@ -31,8 +30,7 @@ function analyzeVoicePatterns(voiceProfile: VoiceProfile): string {
   if (hasExclamations) patterns.push('Uses exclamation points for emphasis')
   if (hasTrailingOff) patterns.push('Trails off with "..."')
 
-  return patterns.join('
-- ')
+  return patterns.join('\n- ')
 }
 
 export function buildVoiceTransformationPrompt(params: VoiceTransformationParams): string {
@@ -79,8 +77,7 @@ export function buildVoiceTransformationPrompt(params: VoiceTransformationParams
 
   const sampleSpeechSection = allSamples
     .map((quote, i) => `${i + 1}. "${quote}"`)
-    .join('
-')
+    .join('\n')
 
   // Parasocial config
   const parasocialStrengths = voiceProfile.parasocial_config?.strengths || voiceProfile.parasocial?.strengths || []
@@ -102,8 +99,7 @@ export function buildVoiceTransformationPrompt(params: VoiceTransformationParams
       }
       return `- ${s.replace(/_/g, ' ')}: ${descriptions[s] || 'Use authentically'}`
     })
-    .join('
-')
+    .join('\n')
 
   // CRITICAL: Audience targeting data
   const audience = voiceProfile.audience as Record<string, unknown>
@@ -134,9 +130,7 @@ Word count: ${script.word_count}
 Target: Maintain similar length (±10 words)
 ---`
     })
-    .join('
-
-')
+    .join('\n\n')
 
   // Build her vocabulary section
   const herVocabSection = sexualVocab ? `
@@ -156,8 +150,7 @@ Acts - USE HER TERMS:
 - Masturbation: ${actEuphemisms?.masturbation?.join(', ') || 'playing with myself'}
 
 Her Signature Spicy Lines:
-${signatureSpicyPhrases.length > 0 ? signatureSpicyPhrases.map(p => `- "${p}"`).join('
-') : '- Reference her sample speech'}
+${signatureSpicyPhrases.length > 0 ? signatureSpicyPhrases.map(p => `- "${p}"`).join('\n') : '- Reference her sample speech'}
 
 **IF THE SCRIPT USES GENERIC TERMS, REPLACE THEM WITH HER TERMS**
 ` : ''
@@ -216,8 +209,7 @@ Her strengths (USE THESE):
 ${strengthsSection}
 
 Her avoid list (DO NOT USE):
-${parasocialAvoid.map((a: string) => `- ${a.replace(/_/g, ' ')}`).join('
-') || '- None specified'}
+${parasocialAvoid.map((a: string) => `- ${a.replace(/_/g, ' ')}`).join('\n') || '- None specified'}
 
 ## AI TELL DETECTION (REMOVE ALL OF THESE)
 
@@ -275,9 +267,7 @@ Vocabulary tells:
 
 5. **SINGLE FLOW OUTPUT (CRITICAL)**
    - Output must be ONE CONTINUOUS STRING
-   - NO paragraph breaks (
-
-)
+   - NO paragraph breaks (\n\n)
    - NO line breaks in the middle of speech
    - It should read like one natural spoken thought
    - This is how viral TikTok scripts work - one flow
@@ -323,7 +313,7 @@ Return a JSON array of transformed scripts:
 ]
 
 **CRITICAL**: 
-- "transformed_script" must be ONE STRING with NO \n characters
+- "transformed_script" must be ONE STRING with NO \\n characters
 - Remove all line breaks from input if present
 - This should read like continuous natural speech
 
